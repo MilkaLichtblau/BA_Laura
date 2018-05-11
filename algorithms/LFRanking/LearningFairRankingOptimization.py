@@ -8,7 +8,7 @@ Created on Sat May  5 17:44:50 2018
 from __future__ import division
 import numpy as np
 from numba.decorators import jit
-import measures # import for accuracy measures
+import scoreDiff # import for accuracy measures
 import utility # import for calculation of weighted scores
 
 # Code refers to https://github.com/DataResponsibly/FairRank/blob/master/optimization.py 
@@ -17,10 +17,6 @@ import utility # import for calculation of weighted scores
 # Part of optimization code refers from github https://github.com/zjelveh/learning-fair-representations/blob/master/lfr.py 
 
 SCORE_DIVERGENCE="scoreDiff" # represent average score difference -ranking accuracy measure
-#POSITION_DIFFERENCE="positionDiff" # represent average position difference -ranking accuracy measure
-#KENDALL_DIS="kendallDis" # represent kendall distance -ranking accuracy measure
-#SPEARMAN_COR="spearmanDis" # represent spearman correlation -ranking accuracy measure
-#PEARSON_COR="pearsonDis" # represent pearson correlation -ranking accuracy measure
 
 
 def calculateEvaluateRez(_rez,_data,_inputscores,_k,_accmeasure):
@@ -37,33 +33,30 @@ def calculateEvaluateRez(_rez,_data,_inputscores,_k,_accmeasure):
     user_N,att_N=_data.shape
 
     # error handling for input type
-    if not isinstance(_rez, (list, tuple, np.ndarray)) and not isinstance( _rez, basestring ):
-        raise TypeError("Input parameter list must be a list-wise structure defined by '[]' symbol")
-    if not isinstance(_inputscores, (list, tuple, np.ndarray)) and not isinstance( _inputscores, basestring ):
-        raise TypeError("Input score list must be a list-wise structure defined by '[]' symbol")
-    if not isinstance( _k, ( int, long ) ):
-        raise TypeError("Input k must be an integer")
-    #if not isinstance( _accmeasure, str ):
-    #    raise TypeError("Input accuracy measure must be a string that choose from ['scoreDiff', 'positionDiff', 'kendallDis', 'spearmanDis', 'pearsonDis'] defined in the begining of this file")
+    if not isinstance(_rez, (list, tuple, np.ndarray)) and not isinstance( _rez ):
+        raise TypeError("Input parameter list must be a list-wise structure defined by '[]' symbol.")
+    if not isinstance(_inputscores, (list, tuple, np.ndarray)) and not isinstance( _inputscores ):
+        raise TypeError("Input score list must be a list-wise structure defined by '[]' symbol.")
+    if not isinstance( _k, ( int ) ):
+        raise TypeError("Input k must be an integer.")
     
     # error handling for input value
     if user_N == 0:
-        raise ValueError("Input data should not be empty")
+        raise ValueError("Input data should not be empty.")
     if att_N == 0:
-        raise ValueError("Input data should have at least one attribute column")
+        raise ValueError("Input data should have at least one attribute column.")
 
     if len(_rez) == 0:
-        raise ValueError("Input _rez should not be empty")
+        raise ValueError("Input _rez should not be empty.")
     if len(_inputscores) == 0:
-        raise ValueError("Input estimated score list should not be empty")
+        raise ValueError("Input estimated score list should not be empty.")
     if _k == 0:
-        raise ValueError("Input k must be an integer larger than 0")    
+        raise ValueError("Input k must be an integer larger than 0.")    
 
     # initialize the clusters
     clusters=np.matrix(_rez[0][(2 * att_N) + _k:]).reshape((_k, att_N))
-    alpha1 = _rez[0][att_N : 2 * att_N]
     # get the distance between input user X and intermediate clusters Z
-    dists_x = distances(_data, clusters, alpha1, user_N, att_N, _k)
+    dists_x = distances(_data, clusters, user_N, att_N, _k)
     # compute the probability of each X maps to Z
     Mnk_x=M_nk(dists_x, user_N, _k)
     # get the estimated scores and ranking accuracy
@@ -71,13 +64,12 @@ def calculateEvaluateRez(_rez,_data,_inputscores,_k,_accmeasure):
     return scores_hat, ranking_accuracy
 
 @jit
-def distances(_X, _clusters, _alpha, _N, _P, _k): 
+def distances(_X, _clusters, _N, _P, _k): 
     """
         Calculate the distance between input X and clusters Z.
         :param _X: The input user feature vector 
         :param _clusters: The clusters in the intermediate Z
-        :param _alpha: The weight of each attribute in the input X
-        :param _N: The total user number in input X
+        :param _N: The total item number in input X
         :param _P: The attribute number in input X
         :param _k: The number of clusters in the intermediate layer of neural network        
         :return: returns the distance matrix between X and Z.
@@ -95,7 +87,6 @@ def M_nk(_dists, _N, _k):
         Calculate the probability of input X maps to clusters Z.
         :param _dists: The distance matrix between X and Z 
         :param _clusters: The clusters in the intermediate Z
-        :param _alpha: The weight of each attribute in the input X
         :param _N: The total user number in input X
         :param _P: The attribute number in input X
         :param _k: The number of clusters in the intermediate layer of neural network        
@@ -155,7 +146,7 @@ def x_n_hat(_X, _M_nk, _clusters, _N, _P, _k):
     return x_n_hat, L_x
 
 # @jit 
-def calculateEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k,_accmeasure):
+def calculateEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k):
     """
         Calculate the estimated score and ranking accuracy of corresponding ranking.
         :param _M_nk_x: The probability mapping matrix from input X and clusters Z 
@@ -179,40 +170,19 @@ def calculateEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k,_accmeasure):
     score_hat=list(score_hat)    
     _inputscores=list(_inputscores)
     
-    # generate permutations of two score lists returned permutation of sorted id
-    per_scores_hat=sorted(range(len(score_hat)), key=lambda k: score_hat[k],reverse=True)
-    per_scores_input=sorted(range(len(_inputscores)), key=lambda k: _inputscores[k],reverse=True)
     # sort the scores in descending order
     sorted_score_hat = score_hat   
     sorted_score_hat.sort(reverse=True)
     sorted_inputscores = _inputscores   
     sorted_inputscores.sort(reverse=True)
 
-    if _accmeasure==SCORE_DIVERGENCE:
-        L_y=measures.calculateScoreDifference(sorted_score_hat,sorted_inputscores) 
-        ranking_loss = L_y
-
-    elif _accmeasure==POSITION_DIFFERENCE:        
-        L_y=measures.calculatePositionDifference(per_scores_hat,per_scores_input) 
-        ranking_loss = L_y
-
-    elif _accmeasure==KENDALL_DIS: 
-        L_y=measures.calculateKendallDistance(per_scores_hat,per_scores_input) # kendall distance        
-        ranking_loss = L_y
-    
-    # for spearman and pearson relation, use the negative value to minimize during optimization
-    elif _accmeasure==SPEARMAN_COR:
-        L_y=measures.calculateSpearmanR(score_hat,_inputscores)
-        ranking_loss = -L_y 
-
-    elif _accmeasure==PEARSON_COR:
-        L_y=measures.calculatePearsonC(score_hat,_inputscores)
-        ranking_loss=-L_y
+    L_y=scoreDiff.calculateScoreDifference(sorted_score_hat,sorted_inputscores) 
+    ranking_loss = L_y
     
     return score_hat, ranking_loss
 
 def lbfgsOptimize(_params, _data, _pro_data, _unpro_data, 
-        _inputscores, _accmeasure, _k, A_x = 0.01, A_y = 1, A_z = 100, results=0):
+        _inputscores, _k, A_x = 0.01, A_y = 1, A_z = 100, results=0):
     
     """
         The function to run the optimization using l-bfgs algorithm.
@@ -238,13 +208,11 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     unpro_N, unpro_att_N = _unpro_data.shape
 
     # error handling for input type
-    if not isinstance(_inputscores, (list, tuple, np.ndarray)) and not isinstance( _inputscores, basestring ):
+    if not isinstance(_inputscores, (list, tuple, np.ndarray)) and not isinstance( _inputscores ):
         raise TypeError("Input score list must be a list-wise structure defined by '[]' symbol")
-    if not isinstance( _k, ( int, long ) ):
+    if not isinstance( _k, ( int ) ):
         raise TypeError("Input k must be an integer")
-    if not isinstance( _accmeasure, str ):
-        raise TypeError("Input accuracy measure must be a string that choose from ['scoreDiff', 'positionDiff', 'kendallDis', 'spearmanDis', 'pearsonDis'] defined in the begining of this file")
-    
+
     # error handling for input value
     if user_N == 0:
         raise ValueError("Input data should not be empty")
@@ -262,20 +230,16 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
         raise ValueError("Input k must be an integer larger than 0")
 
 
-    # initialize parameters of neural network
-    alpha0 = _params[:att_N]
-    alpha1 = _params[att_N : 2 * att_N]
-    w = _params[2 * att_N : (2 * att_N) + _k]
     # initialize the starting clusters
     clusters = np.matrix(_params[(2 * att_N) + _k:]).reshape((_k, att_N)) 
     # compute the distance from X to Z    
-    dists_x = distances(_data, clusters, alpha1, user_N, att_N, _k)  
+    dists_x = distances(_data, clusters, user_N, att_N, _k)  
     M_nk_x = M_nk(dists_x, user_N, _k)    
     
    
     # based on the cluster centroid compute the distance of protected group and unprotected group
-    pro_dists = distances(_pro_data, clusters, alpha1, pro_N, att_N, _k)
-    unpro_dists = distances(_unpro_data, clusters, alpha0, unpro_N, att_N, _k)
+    pro_dists = distances(_pro_data, clusters, pro_N, att_N, _k)
+    unpro_dists = distances(_unpro_data, clusters, unpro_N, att_N, _k)
        
     # compute the probability mapping from X to Z
     pro_M_nk = M_nk(pro_dists, pro_N, _k)
@@ -296,7 +260,7 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     
     # compute the estimated scores and ranking accuracy i.e. sub-loss of ranking Y
 
-    estimate_scores, L_y = calculateEstimateY(M_nk_x, _inputscores, clusters, user_N, _k, _accmeasure)
+    estimate_scores, L_y = calculateEstimateY(M_nk_x, _inputscores, clusters, user_N, _k)
     
     # generate the total loss    
     criterion = A_x * L_x + A_y * L_y + A_z * L_z
@@ -309,8 +273,8 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
         return estimate_scores, pro_M_nk, unpro_M_nk
     else:
         return criterion
-# after each optimization, reset the iteration to zero
-lbfgsOptimize.iters = 0
+    # after each optimization, reset the iteration to zero
+    lbfgsOptimize.iters = 0
 
 def initOptimization(_data,_k):
     """
@@ -322,7 +286,7 @@ def initOptimization(_data,_k):
     user_N,att_N=_data.shape
 
     # error handling for input type    
-    if not isinstance( _k, ( int, long ) ):
+    if not isinstance( _k, ( int ) ):
         raise TypeError("Input k must be an integer")
 
     # error handling for input value
@@ -343,4 +307,4 @@ def initOptimization(_data,_k):
             bnd.append((None, None))
         else:
             bnd.append((0, 1))
-return rez, bnd
+    return rez, bnd

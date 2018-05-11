@@ -1,6 +1,6 @@
 # BA_Laura
 
-<heading>Benchmarking for Fair Machine Learning Algorithms<heading>
+Benchmarking for Fair Machine Learning Algorithms
 
 This repository provides a framework with benchmarks for four fair ranking algorithms.
 

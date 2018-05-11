@@ -1,8 +1,9 @@
-'''
-Created on Apr 3, 2017
+# -*- coding: utf-8 -*-
+"""
+Created on Fri May 11 17:16:07 2018
 
-@author: meike.zehlike
-'''
+@author: Laura
+"""
 
 import csv
 import numpy as np
@@ -69,4 +70,3 @@ def createScoreOrderedCSV(rawFilepath, outFile, column, desc=True):
     with open(outFile, 'w', newline='') as csvOut:
         writer = csv.writer(csvOut)
         writer.writerows(ranking)
-    
