@@ -7,6 +7,7 @@ Created on Fri May 11 16:22:43 2018
 
 from __future__ import division
 import scipy.optimize as optim
+import csv
 import LearningFairRankingOptimization
 import utility
 # a python script for optimization. Can be run from command line by following command
@@ -43,35 +44,37 @@ def main(_csv_fn,_target_col,_sensi_bound,_k,_cut_point,_rez_fn):
 
     data,input_scores,pro_data,unpro_data,pro_index=utility.transformCSVdata(_csv_fn,_target_col,_sensi_bound)
     
-    user_N = len(data)
-    pro_N = len(pro_data)
+    #user_N = len(data)
+    #pro_N = len(pro_data)
     
     print("start opt")
 
     # initialize the optimization
     rez,bnd=LearningFairRankingOptimization.initOptimization(data,_k) 
     
+    
     LearningFairRankingOptimization.lbfgsOptimize.iters=0                
     rez = optim.fmin_l_bfgs_b(LearningFairRankingOptimization.lbfgsOptimize, x0=rez, disp=1, epsilon=1e-5, 
                    args=(data, pro_data, unpro_data, input_scores, _k, 0.01,
                          1, 100, 0), bounds = bnd,approx_grad=True, factr=1e12, pgtol=1e-04,maxfun=15000, maxiter=15000)
-    
     print ("End opt")
     # evaluation after converged
     estimate_scores,acc_value=LearningFairRankingOptimization.calculateEvaluateRez(rez,data,input_scores,_k)
+
+    final_scores = []
+    for i in estimate_scores:
+        final_scores.append([i])
+    print(final_scores)
     
-    # prepare the result line to write
+    # prepare the result line to wr
     # initialize the outputted csv file
     result_fn=_rez_fn+".csv"
-    with open('..\results\\' + result_fn,'w') as mf:
-        mf.write("UserN,pro_N,K,TargetAtt,AccMeasure,acc_value\n")
-        rez_file=open(result_fn, 'a')
+    with open('../results/' + result_fn,'w',newline='') as mf:
+        writer = csv.writer(mf)
+        writer.writerows(final_scores)
         
-        rez_fline=str(user_N)+","+str(pro_N)+","+str(_k)+","+str(_target_col)+","+str(acc_value)+"\n"
-        rez_file.write(rez_fline)
-        rez_file.close()
-
-    if __name__ == "__main__":
-        main()
+        #rez_fline=str(user_N)+","+str(pro_N)+","+str(_k)+","+str(_target_col)+","+str(acc_value)+"\n"
+#    if __name__ == "__main__":
+#       main()
         
-main("..\preprocessedDataSets\GermanCredit_age25pre.csv",0,1,4,10,"GermanCredit_age25_LFRankingOpt")
+#main('../../preprocessedDataSets/GermanCredit_age25pre.csv',0,1,4,10,'../../results/GermanCredit_age25_LFRankingOpt')

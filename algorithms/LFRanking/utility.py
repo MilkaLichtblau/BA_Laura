@@ -27,21 +27,12 @@ def transformCSVdata(_data_fn,_target_cols, _sensi_bound):
     if not isinstance( _data_fn, str ):
         raise TypeError("Input file name must be a string which specify the path of input csv file")
     # read into the csv file
-    header = True 
     dat = []
-    print("I'm loading the file now")
     try:        
-        with open(_data_fn, 'rb') as f:
-            rows = csv.reader(f)  
-            print("I loaded the file")
+        with open(_data_fn, 'r') as f:
+            rows = csv.reader(f)
             for row in rows:
-                print("Im printing rows now")
-                if header:
-                    header = False
-                    continue
-                print(row)
                 dat.append([float(r) for r in row])
-                print(row)
     except EnvironmentError as e:
         print("Cannot find the csv file")
 
@@ -53,7 +44,7 @@ def transformCSVdata(_data_fn,_target_cols, _sensi_bound):
     
     if len(dat) == 0:
         raise ValueError("Input file should not be empty")
-    print('Finished reading csv!') 
+
     data = np.array(dat)
     user_N, att_N= data.shape
 
@@ -65,7 +56,6 @@ def transformCSVdata(_data_fn,_target_cols, _sensi_bound):
     # separate the sensitve attribute
     sensi_att = np.array(data[:,-1]).flatten()
     data = data[:,:-1] 
-       
     # get the protected and unprotected group 
     pro_index = np.array(np.where(sensi_att ==_sensi_bound))[0].flatten()    
     unpro_index = np.array(np.where(sensi_att !=_sensi_bound))[0].flatten()
@@ -75,6 +65,7 @@ def transformCSVdata(_data_fn,_target_cols, _sensi_bound):
     
     # ranked on some attributes or scores by weighted summation of all attributes 
     _, att_N_after = data.shape
+    
 
     if _target_cols==att_N_after:
         scores=calculateWeightedScores(data)

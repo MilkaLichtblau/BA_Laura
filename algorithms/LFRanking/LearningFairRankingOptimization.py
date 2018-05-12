@@ -19,9 +19,10 @@ import utility # import for calculation of weighted scores
 SCORE_DIVERGENCE="scoreDiff" # represent average score difference -ranking accuracy measure
 
 
-def calculateEvaluateRez(_rez,_data,_inputscores,_k,_accmeasure):
+def calculateEvaluateRez(_rez,_data,_inputscores,_k):
     """
-        Calculate estimated scores of all input user and ranking accuracy of the corresponding ranking after optimization converged.
+        Calculate estimated scores of all input user and ranking accuracy of the corresponding 
+        ranking after optimization converged.
         :param _rez: The optimization parameter results of L-BFGS algorithm after converged
         :param _data: The input data, each row is a feature vector of one user
         :param _inputscores: The input scores of data that can be weighted scores or some score attributes
@@ -60,7 +61,7 @@ def calculateEvaluateRez(_rez,_data,_inputscores,_k,_accmeasure):
     # compute the probability of each X maps to Z
     Mnk_x=M_nk(dists_x, user_N, _k)
     # get the estimated scores and ranking accuracy
-    scores_hat, ranking_accuracy = calculateEstimateY(Mnk_x, _inputscores, clusters, user_N, _k, _accmeasure)
+    scores_hat, ranking_accuracy = calculateEstimateY(Mnk_x, _inputscores, clusters, user_N, _k)
     return scores_hat, ranking_accuracy
 
 @jit
@@ -79,6 +80,7 @@ def distances(_X, _clusters, _N, _P, _k):
         for p in range(_P):
             for j in range(_k):    
                 dists[i, j] += (_X[i, p] - _clusters[j, p]) * (_X[i, p] - _clusters[j, p]) 
+
     return dists
 
 @jit
@@ -201,6 +203,7 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
                  returns the last loss during optimization if optimization doesn't converge.
     """
 
+
     lbfgsOptimize.iters += 1 
     # get basic statistics
     user_N, att_N= _data.shape
@@ -234,6 +237,7 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     clusters = np.matrix(_params[(2 * att_N) + _k:]).reshape((_k, att_N)) 
     # compute the distance from X to Z    
     dists_x = distances(_data, clusters, user_N, att_N, _k)  
+    #Calculate the probability of input X maps to clusters Z
     M_nk_x = M_nk(dists_x, user_N, _k)    
     
    
@@ -241,14 +245,15 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     pro_dists = distances(_pro_data, clusters, pro_N, att_N, _k)
     unpro_dists = distances(_unpro_data, clusters, unpro_N, att_N, _k)
        
-    # compute the probability mapping from X to Z
+    # compute the probability mapping from X to Z for protected and unprotected group respectively
     pro_M_nk = M_nk(pro_dists, pro_N, _k)
     unpro_M_nk = M_nk(unpro_dists, unpro_N, _k)
     
     # compute the summed probability of protected and unprotected group
     pro_M_k = M_k(pro_M_nk, pro_N, _k)
     unpro_M_k = M_k(unpro_M_nk, unpro_N, _k)
-    # compute the mapping difference between protected group and unprotected group i.e. sub-loss of group fairness
+    # compute the mapping difference between protected group and unprotected group 
+    #i.e. sub-loss of group fairness
     L_z = 0.0
     for j in range(_k):
         L_z += abs(pro_M_k[j] - unpro_M_k[j])
@@ -297,9 +302,10 @@ def initOptimization(_data,_k):
     if _k == 0:
         raise ValueError("Input k must be an integer larger than 0")    
 
-
     # initialize the parameter vector for neural network
     rez = np.random.uniform(size=_data.shape[1] * 2 + _k + _data.shape[1] * _k)
+    
+
     # initialize the bound of optimization algorithm
     bnd = []
     for i, k2 in enumerate(rez):
@@ -307,4 +313,6 @@ def initOptimization(_data,_k):
             bnd.append((None, None))
         else:
             bnd.append((0, 1))
+            
+
     return rez, bnd
