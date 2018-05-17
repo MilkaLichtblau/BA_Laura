@@ -4,8 +4,8 @@ Created on Jan 11, 2017
 @author: meike.zehlike
 '''
 from scipy.stats import binom
-from utilsAndConstants.utils import countProtected
-from post_processing_methods.fair_ranker.alpha_adjustment import AlphaAdjustment
+from algorithms.fair_ranker.utils import countProtected
+from algorithms.fair_ranker.alpha_adjustment import AlphaAdjustment
 
 class FairnessInRankingsTester():
     """
@@ -129,4 +129,5 @@ class FairnessInRankingsTester():
         mtableAsList = fc.mtable.m.tolist()
         mtableAsList = [int(i) for i in mtableAsList]
         return mtableAsList
+
 

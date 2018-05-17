@@ -27,3 +27,5 @@ sorted_inputscores.sort(reverse=True)
 
 print(sorted_score_hat)
 print(sorted_inputscores)
+
+print(round(0.45,1))

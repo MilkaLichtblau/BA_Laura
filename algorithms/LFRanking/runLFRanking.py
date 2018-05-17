@@ -16,7 +16,6 @@ import utility
 # target_att represents the target attribute to rank on 
 # sensi_value is the value of sentitive attribute represents the protected group
 # k represents the size of intermediate layer of neural network
-# acc_measure is choose from ["scoreDiff", "positionDiff", "kendallDis", "spearmanDis", "pearsonDis"]
 # cut_point is the cut position of ranking to compute split fairness measures.
 # output_fn represents the output file of optimization results
 
@@ -60,11 +59,16 @@ def main(_csv_fn,_target_col,_sensi_bound,_k,_cut_point,_rez_fn):
     print ("End opt")
     # evaluation after converged
     estimate_scores,acc_value=LearningFairRankingOptimization.calculateEvaluateRez(rez,data,input_scores,_k)
+    estimate_ranking=sorted(range(len(estimate_scores)), key=lambda k: estimate_scores[k],reverse=True)
 
     final_scores = []
-    for i in estimate_scores:
-        final_scores.append([i])
-    print(final_scores)
+    #for i, j, k in estimate_ranking, estimate_scores, estimate_rev:
+    #    final_scores.append([(i+1), j, k])
+    
+    for i in estimate_ranking:
+        estimate_ranking[i] = estimate_ranking[i] + 1
+    
+    final_scores = zip(estimate_ranking, estimate_scores)
     
     # prepare the result line to wr
     # initialize the outputted csv file
@@ -77,4 +81,4 @@ def main(_csv_fn,_target_col,_sensi_bound,_k,_cut_point,_rez_fn):
 #    if __name__ == "__main__":
 #       main()
         
-#main('../../preprocessedDataSets/GermanCredit_age25pre.csv',0,1,4,10,'../../results/GermanCredit_age25_LFRankingOpt')
+main('../../preprocessedDataSets/GermanCredit_age25pre.csv',0,1,4,10,'../../results/GermanCredit_age25_LFRankingOpt')
