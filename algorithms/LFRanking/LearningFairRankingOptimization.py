@@ -8,61 +8,13 @@ Created on Sat May  5 17:44:50 2018
 from __future__ import division
 import numpy as np
 from numba.decorators import jit
-import scoreDiff # import for accuracy measures
-import utility # import for calculation of weighted scores
+from algorithms.LFRanking import scoreDiff # import for accuracy measures
+from algorithms.LFRanking import utility # import for calculation of weighted scores
 
-# Code refers to https://github.com/DataResponsibly/FairRank/blob/master/optimization.py 
 # a python script define optimization process
 # test of this script can be found in testOptimization.py
 # Part of optimization code refers from github https://github.com/zjelveh/learning-fair-representations/blob/master/lfr.py 
 
-SCORE_DIVERGENCE="scoreDiff" # represent average score difference -ranking accuracy measure
-
-
-def calculateEvaluateRez(_rez,_data,_inputscores,_k):
-    """
-        Calculate estimated scores of all input user and ranking accuracy of the corresponding 
-        ranking after optimization converged.
-        :param _rez: The optimization parameter results of L-BFGS algorithm after converged
-        :param _data: The input data, each row is a feature vector of one user
-        :param _inputscores: The input scores of data that can be weighted scores or some score attributes
-        :param _k: The number of clusters in the intermediate layer of neural network.  
-        Higher K represents more accurate prediction. Also takes more time to converge.
-        :param _accmeasure: The accuracy measure used in this function
-        :return: returns the estimated scores and ranking accuracy of corresponding ranking
-    """
-    user_N,att_N=_data.shape
-
-    # error handling for input type
-    if not isinstance(_rez, (list, tuple, np.ndarray)) and not isinstance( _rez ):
-        raise TypeError("Input parameter list must be a list-wise structure defined by '[]' symbol.")
-    if not isinstance(_inputscores, (list, tuple, np.ndarray)) and not isinstance( _inputscores ):
-        raise TypeError("Input score list must be a list-wise structure defined by '[]' symbol.")
-    if not isinstance( _k, ( int ) ):
-        raise TypeError("Input k must be an integer.")
-    
-    # error handling for input value
-    if user_N == 0:
-        raise ValueError("Input data should not be empty.")
-    if att_N == 0:
-        raise ValueError("Input data should have at least one attribute column.")
-
-    if len(_rez) == 0:
-        raise ValueError("Input _rez should not be empty.")
-    if len(_inputscores) == 0:
-        raise ValueError("Input estimated score list should not be empty.")
-    if _k == 0:
-        raise ValueError("Input k must be an integer larger than 0.")    
-
-    # initialize the clusters
-    clusters=np.matrix(_rez[0][(2 * att_N) + _k:]).reshape((_k, att_N))
-    # get the distance between input user X and intermediate clusters Z
-    dists_x = distances(_data, clusters, user_N, att_N, _k)
-    # compute the probability of each X maps to Z
-    Mnk_x=M_nk(dists_x, user_N, _k)
-    # get the estimated scores and ranking accuracy
-    scores_hat, ranking_accuracy = calculateEstimateY(Mnk_x, _inputscores, clusters, user_N, _k)
-    return scores_hat, ranking_accuracy
 
 @jit
 def distances(_X, _clusters, _N, _P, _k): 
@@ -70,7 +22,7 @@ def distances(_X, _clusters, _N, _P, _k):
         Calculate the distance between input X and clusters Z.
         :param _X: The input user feature vector 
         :param _clusters: The clusters in the intermediate Z
-        :param _N: The total item number in input X
+        :param _N: The total user number in input X
         :param _P: The attribute number in input X
         :param _k: The number of clusters in the intermediate layer of neural network        
         :return: returns the distance matrix between X and Z.
@@ -80,7 +32,6 @@ def distances(_X, _clusters, _N, _P, _k):
         for p in range(_P):
             for j in range(_k):    
                 dists[i, j] += (_X[i, p] - _clusters[j, p]) * (_X[i, p] - _clusters[j, p]) 
-
     return dists
 
 @jit
@@ -89,6 +40,7 @@ def M_nk(_dists, _N, _k):
         Calculate the probability of input X maps to clusters Z.
         :param _dists: The distance matrix between X and Z 
         :param _clusters: The clusters in the intermediate Z
+        :param _alpha: The weight of each attribute in the input X
         :param _N: The total user number in input X
         :param _P: The attribute number in input X
         :param _k: The number of clusters in the intermediate layer of neural network        
@@ -155,8 +107,7 @@ def calculateEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k):
         :param _inputscores: The input scores of all users
         :param _clusters: The clusters in the intermediate Z
         :param _N: The total user number in input X        
-        :param _k: The number of clusters in the intermediate layer of neural network
-        :param _accmeasure: The ranking accuracy measure used in this function        
+        :param _k: The number of clusters in the intermediate layer of neural network       
         :return: returns the estimated X and loss between input X and estimated X.
     """
     score_hat = np.zeros(_N) # initialize the estimated scores
@@ -171,13 +122,13 @@ def calculateEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k):
     
     score_hat=list(score_hat)    
     _inputscores=list(_inputscores)
-    
+
     # sort the scores in descending order
     sorted_score_hat = score_hat   
     sorted_score_hat.sort(reverse=True)
     sorted_inputscores = _inputscores   
     sorted_inputscores.sort(reverse=True)
-
+    
     L_y=scoreDiff.calculateScoreDifference(sorted_score_hat,sorted_inputscores) 
     ranking_loss = L_y
     
@@ -193,7 +144,6 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
         :param _pro_data: The input data of protected group
         :param _unpro_data: The input data of unprotected group
         :param _inputscores: The scores of input users which can be a score attribute or summed score of all attributes
-        :param _accmeasure: The ranking accuracy measure used in this function
         :param _k: The number of clusters in the intermediate layer of neural network        
         :param A_x: The super parameter - optimization weight for accuracy of reconstructing X
         :param A_y: The super parameter - optimization weight for ranking accuracy
@@ -202,7 +152,6 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
         :return: returns the estimated scores of all user and the probability mapping of protected and unprotected group if converged.
                  returns the last loss during optimization if optimization doesn't converge.
     """
-
 
     lbfgsOptimize.iters += 1 
     # get basic statistics
@@ -213,7 +162,7 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     # error handling for input type
     if not isinstance(_inputscores, (list, tuple, np.ndarray)) and not isinstance( _inputscores ):
         raise TypeError("Input score list must be a list-wise structure defined by '[]' symbol")
-    if not isinstance( _k, ( int ) ):
+    if not isinstance( _k, ( int) ):
         raise TypeError("Input k must be an integer")
 
     # error handling for input value
@@ -237,7 +186,6 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     clusters = np.matrix(_params[(2 * att_N) + _k:]).reshape((_k, att_N)) 
     # compute the distance from X to Z    
     dists_x = distances(_data, clusters, user_N, att_N, _k)  
-    #Calculate the probability of input X maps to clusters Z
     M_nk_x = M_nk(dists_x, user_N, _k)    
     
    
@@ -245,15 +193,14 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
     pro_dists = distances(_pro_data, clusters, pro_N, att_N, _k)
     unpro_dists = distances(_unpro_data, clusters, unpro_N, att_N, _k)
        
-    # compute the probability mapping from X to Z for protected and unprotected group respectively
+    # compute the probability mapping from X to Z
     pro_M_nk = M_nk(pro_dists, pro_N, _k)
     unpro_M_nk = M_nk(unpro_dists, unpro_N, _k)
     
     # compute the summed probability of protected and unprotected group
     pro_M_k = M_k(pro_M_nk, pro_N, _k)
     unpro_M_k = M_k(unpro_M_nk, unpro_N, _k)
-    # compute the mapping difference between protected group and unprotected group 
-    #i.e. sub-loss of group fairness
+    # compute the mapping difference between protected group and unprotected group i.e. sub-loss of group fairness
     L_z = 0.0
     for j in range(_k):
         L_z += abs(pro_M_k[j] - unpro_M_k[j])
@@ -278,8 +225,8 @@ def lbfgsOptimize(_params, _data, _pro_data, _unpro_data,
         return estimate_scores, pro_M_nk, unpro_M_nk
     else:
         return criterion
-    # after each optimization, reset the iteration to zero
-    lbfgsOptimize.iters = 0
+# after each optimization, reset the iteration to zero
+lbfgsOptimize.iters = 0
 
 def initOptimization(_data,_k):
     """
@@ -291,7 +238,7 @@ def initOptimization(_data,_k):
     user_N,att_N=_data.shape
 
     # error handling for input type    
-    if not isinstance( _k, ( int ) ):
+    if not isinstance( _k, ( int) ):
         raise TypeError("Input k must be an integer")
 
     # error handling for input value
@@ -302,10 +249,9 @@ def initOptimization(_data,_k):
     if _k == 0:
         raise ValueError("Input k must be an integer larger than 0")    
 
+
     # initialize the parameter vector for neural network
     rez = np.random.uniform(size=_data.shape[1] * 2 + _k + _data.shape[1] * _k)
-    
-
     # initialize the bound of optimization algorithm
     bnd = []
     for i, k2 in enumerate(rez):
@@ -313,6 +259,4 @@ def initOptimization(_data,_k):
             bnd.append((None, None))
         else:
             bnd.append((0, 1))
-            
-
     return rez, bnd

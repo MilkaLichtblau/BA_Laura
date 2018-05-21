@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 11 16:24:33 2018
+Created on Fri May 18 16:38:12 2018
 
 @author: Laura
 """
@@ -42,7 +42,7 @@ def transformCSVdata(_data_fn,_target_cols, _sensi_bound):
         print("Cannot find the csv file")
 
 
-    if not isinstance( _target_cols, ( int ) ):
+    if not isinstance( _target_cols, ( int) ):
         raise TypeError("Input target column must be an integer value from [0, col(data)-2], data is the input data in file _data_fn")
     if not isinstance( _sensi_bound, ( int ) ):
         raise TypeError("Input value of sensitive attribute must be an integer value can be 0 or 1")
@@ -106,4 +106,10 @@ def calculateWeightedScores(_data):
     return scores 
 
 
-#transformCSVdata('../../preprocessedDataSets/GermanCredit_age25pre.csv',0,1)
+data,scores,pro_data,unpro_data,pro_index=transformCSVdata("preprocessedDataSets/GermanCredit_age25pre.csv",0,1)
+
+print(data)
+print(scores)
+print(pro_data)
+print(unpro_data)
+print(pro_index)

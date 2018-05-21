@@ -7,78 +7,103 @@ Created on Fri May 11 16:22:43 2018
 
 from __future__ import division
 import scipy.optimize as optim
-import csv
-import LearningFairRankingOptimization
-import utility
-# a python script for optimization. Can be run from command line by following command
-# runOptimization input_fn target_att sensi_value k acc_measure cut_point output_fn
-# input_fn represents the csv file stores the source data
-# target_att represents the target attribute to rank on 
-# sensi_value is the value of sentitive attribute represents the protected group
-# k represents the size of intermediate layer of neural network
-# cut_point is the cut position of ranking to compute split fairness measures.
-# output_fn represents the output file of optimization results
+import numpy as np
+from algorithms.LFRanking import LearningFairRankingOptimization
+from algorithms.LFRanking import utility # import for calculation of weighted scores
 
-# test of this script can be found in testOptimization.py
 
-SCORE_DIVERGENCE="scoreDiff" # represent average score difference -ranking accuracy measure
-
-def main(_csv_fn,_target_col,_sensi_bound,_k,_cut_point,_rez_fn):
+def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
+#def runLFRanking(_csv_fn,_target_col,_sensi_bound,_k): 
     """
         Run the optimization process.
-        Output evaluation results as csv file.
-        Output results (accuracy, group fairness in op, values of group fairness measures) during optimization as txt files. 
+        @param ranking: list with candidates that can be used for the ranking
+        @param protected: list with candidates belonging to the protected group
+        @param unrpotected: list with candidates belonging to the unprotected group   
+        @param _k: The number of clusters in the intermediate layer of neural network
         
-        :param _csv_fn: The file name of input data stored in csv file
-                        In csv file, one column represents one attribute of user
-                        one row represents the feature vector of one user
-        :param _target_col: The target attribute ranked on i.e. score of ranking
-        :param _sensi_bound: The value of sensitve attribute to use as protected group, 0 or 1, usually 1 represnts belonging to protected group 
-                             Applied for binary sensitve attribute
-        :param _k: The number of clusters in the intermediate layer of neural network
-        :param _cut_point: The cut off point of set-wise group fairness calculation
-        :param _rez_fn: The file name to output optimization results
-        :return: no returns.
+        returns the final ranking, the candidates not selected for the ranking and the path for 
+        CSV to save the ranking in
     """        
-
-    data,input_scores,pro_data,unpro_data,pro_index=utility.transformCSVdata(_csv_fn,_target_col,_sensi_bound)
     
-    #user_N = len(data)
-    #pro_N = len(pro_data)
+    dat = []
+    pro_dat = []
+    unpro_dat = []
     
-    print("start opt")
+    for i in range(len(ranking)):
+        dat.append([ranking[i].originalQualification])
+    
+    for i in range(len(protected)):
+        pro_dat.append([protected[i].originalQualification])
+        
+    for i in range(len(unprotected)):
+        unpro_dat.append([unprotected[i].originalQualification])
+    
+    data = np.array(dat)
+    input_scores=data[:,0]
+    pro_data = np.array(pro_dat)
+    unpro_data = np.array(unpro_dat)
+    
+    print("start LFRanking opt")
 
     # initialize the optimization
     rez,bnd=LearningFairRankingOptimization.initOptimization(data,_k) 
-    
     
     LearningFairRankingOptimization.lbfgsOptimize.iters=0                
     rez = optim.fmin_l_bfgs_b(LearningFairRankingOptimization.lbfgsOptimize, x0=rez, disp=1, epsilon=1e-5, 
                    args=(data, pro_data, unpro_data, input_scores, _k, 0.01,
                          1, 100, 0), bounds = bnd,approx_grad=True, factr=1e12, pgtol=1e-04,maxfun=15000, maxiter=15000)
-    print ("End opt")
-    # evaluation after converged
-    estimate_scores,acc_value=LearningFairRankingOptimization.calculateEvaluateRez(rez,data,input_scores,_k)
-    estimate_ranking=sorted(range(len(estimate_scores)), key=lambda k: estimate_scores[k],reverse=True)
 
-    final_scores = []
-    #for i, j, k in estimate_ranking, estimate_scores, estimate_rev:
-    #    final_scores.append([(i+1), j, k])
+
+    print ("Ending LFRanking optimization")
+    # evaluation after converged
     
-    for i in estimate_ranking:
-        estimate_ranking[i] = estimate_ranking[i] + 1
+    user_N,att_N=data.shape
     
-    final_scores = zip(estimate_ranking, estimate_scores)
+    print(rez)
     
-    # prepare the result line to wr
-    # initialize the outputted csv file
-    result_fn=_rez_fn+".csv"
-    with open('../results/' + result_fn,'w',newline='') as mf:
-        writer = csv.writer(mf)
-        writer.writerows(final_scores)
+    # initialize the clusters
+    clusters=np.matrix(rez[0][(2 * att_N) + _k:]).reshape((_k, att_N))
+    
+    print(clusters)
+    # get the distance between input user X and intermediate clusters Z
+    dists_x = LearningFairRankingOptimization.distances(data, clusters, user_N, att_N, _k)
+    # compute the probability of each X maps to Z
+    Mnk_x= LearningFairRankingOptimization.M_nk(dists_x, user_N, _k)
+    print(Mnk_x)
+    fairRanking = calculateFinalEstimateY(Mnk_x, input_scores, clusters, user_N, _k, ranking)
+    
+    rankingResultsPath = "LFRanking/" + DataSetName + "ranking.csv"
         
-        #rez_fline=str(user_N)+","+str(pro_N)+","+str(_k)+","+str(_target_col)+","+str(acc_value)+"\n"
-#    if __name__ == "__main__":
-#       main()
-        
-main('../../preprocessedDataSets/GermanCredit_age25pre.csv',0,1,4,10,'../../results/GermanCredit_age25_LFRankingOpt')
+    return fairRanking, rankingResultsPath
+ 
+    
+def calculateFinalEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k, ranking):
+    """
+        Calculate the estimated score and ranking accuracy of corresponding ranking.
+        :param _M_nk_x: The probability mapping matrix from input X and clusters Z 
+        :param _inputscores: The input scores of all users
+        :param _clusters: The clusters in the intermediate Z
+        :param _N: The total user number in input X        
+        :param _k: The number of clusters in the intermediate layer of neural network 
+        @param ranking: list of candidates for the ranking
+        :return: returns the estimated X and loss between input X and estimated X.
+    """
+    score_hat = np.zeros(_N) # initialize the estimated scores
+    # calculate estimate score of each user by mapping probability between X and Z     
+    for ui in range(_N):
+        score_hat_u = 0.0
+        for ki in range(_k):
+            score_hat_u += (_M_nk_x[ui,ki] * _clusters[ki])                         
+        score_hat[ui] = utility.calculateWeightedScores(score_hat_u)
+    
+    score_hat=list(score_hat)    
+    _inputscores=list(_inputscores)
+    
+    # sort the scores in descending order
+    for i in range(len(ranking)):
+        ranking[i].qualification = score_hat[i]    
+     
+    # order ranking according to new scores
+    ranking.sort(key=lambda candidate: candidate.qualification, reverse=True)
+    
+    return ranking

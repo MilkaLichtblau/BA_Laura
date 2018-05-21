@@ -12,8 +12,7 @@ import numpy as np
 Creates a CSV file from an inputted CSV file which stores a ranking.
 The ranking is based on the inputted score attribute which can be specified by column number 
 starting at 0 like usual in CS and the output is ordered 
-based on that score. Depending on the nature of the score it can also be sorted 
-in ascending order, we assume descending as default.
+based on that score.
 The last attribute of the inputted CSV file must be a label of 0 or 1 where a 1 denotes
 membership of the protected group.
 We assume that all input files possess a header and account for that in this method.
@@ -23,16 +22,14 @@ original file name + "pre.csv" for preprocessed.
 
 class csvPreprocessing():
 
-    def createScoreOrderedCSV(rawFilepath, column, desc=True):
+    def createScoreOrderedCSV(rawFilepath, column):
         """
-        input
-        rawFilepath:    Path of the raw input data csv file
-        column:         Specifies the column that stores the score on which the output file
-                        should be ordered on. 
-        desc:           Orders the ranking in descending order as default, if set to False
-                        order will be ascending
         
-        return          Path of CSV file with the preprocessed data set and order of data set
+        @param rawFilepath:    Path of the raw input data csv file
+        @param column:         Specifies the column that stores the score on which the output file
+                               should be ordered on. 
+        
+        return                 Path of CSV file with the preprocessed data set and order of data set
         """
         
         # error handling for parameters
@@ -65,12 +62,8 @@ class csvPreprocessing():
         #convert string values into float to sort ranking
         ranking = np.array([(float(row[0]),float(row[1])) for row in helper])
         
-        #default: sort ranking descending
-        if desc==True: 
-            ranking = ranking[(-ranking[:,0]).argsort()]
-        #if desc == False sort the score column in ascending order
-        else:
-            ranking = ranking[ranking[:,0].argsort()]
+        #sort ranking descending
+        ranking = ranking[(-ranking[:,0]).argsort()]
         
         #extracting file name and creating output file path
         outFile = rawFilepath.split("/")
@@ -82,10 +75,10 @@ class csvPreprocessing():
             writer = csv.writer(csvOut)
             writer.writerows(ranking)
             
-        return outFilePath, desc
+        return outFilePath
 
 
 
-#nameOut = createScoreOrderedCSV("../dataSets/GermanCredit/GermanCredit_age25.csv", 2, desc=True)
+#nameOut = createScoreOrderedCSV("../dataSets/GermanCredit/GermanCredit_age25.csv", 2)
 
 #print(nameOut)

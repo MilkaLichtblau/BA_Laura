@@ -14,18 +14,23 @@ class Candidate(object):
     """
 
 
-    def __init__(self, qualification, protectedAttributes):
+    def __init__(self, qualification, protectedAttributes, index):
         """
         @param qualification : describes how qualified the candidate is to match the search query
         @param protectedAttributes: list of strings that represent the protected attributes this
                                     candidate has (e.g. gender, race, etc)
                                     if the list is empty/null this is a candidate from a non-protected group
+        @param index: integer values with the index of a candidate in a ranking
         """
         self.__qualification = qualification
         self.__protectedAttributes = protectedAttributes
         # keeps the candidate's initial qualification for evaluation purposes
         self.__originalQualification = qualification
         self.uuid = uuid.uuid4()
+        # index after optimization with fair ranking
+        self.__currentIndex = index
+        # index from baseline algorithm
+        self.__originalIndex = index
 
 
     @property
@@ -55,8 +60,22 @@ class Candidate(object):
         false otherwise
         '''
         return not self.__protectedAttributes == []
+    
+    @property
+    def currentIndex(self):
+        return self.__currentIndex
 
-
+    @currentIndex.setter
+    def currentIndex(self, value):
+        self.__currentIndex = value
+    
+    @property
+    def originalIndex(self):
+        return self.__originalIndex
+    
+    @originalIndex.setter
+    def originalIndex(self, value):
+        self.__originalIndex = value
 
 
 

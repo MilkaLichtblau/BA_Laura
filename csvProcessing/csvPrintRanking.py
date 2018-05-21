@@ -20,7 +20,7 @@ def createRankingCSV(rankedCandidates, rankingResultsPath):
         ranking.append([uid, originQ, quali, proAttr])
             
         
-    with open('results/' + rankingResultsPath,'w',newline='') as mf:
+    with open('rankings/' + rankingResultsPath,'w',newline='') as mf:
              writer = csv.writer(mf)
              writer.writerows(ranking) 
         

@@ -12,7 +12,19 @@ EVALUATE_FAILURE_PROBABILITY = 0
 
 
 
-def run(dataSetName, protected, nonProtected, k):
+def runFAIR(dataSetName, protected, nonProtected, k):
+    
+        """
+        Runs the FAIR ranking process
+        
+        @param dataSetName: the used data set with the ending 'pre' for preprocessed
+        @param protected: list of protected candidates for the ranking
+        @param nonProtected: list of non-protected candidates for the ranking
+        @param k: truncation point of the ranking
+        
+        returns the final ranking, the candidates not selected for the ranking and the path for 
+        CSV to save the ranking in
+        """
         
         pairsOfPAndAlpha = initPAndAlpha(k)
         
@@ -118,34 +130,3 @@ def rankFAIR(protected, nonProtected, k, dataSetName, pairsOfPAndAlpha):
         
         
         return fairRankingOut, fairNotSelected, dataSetName
-        
-        """
-        ranking = []
-        
-        for i in range(len(fairRankingOut)):
-    
-            uid = str(fairRankingOut[i].uuid)
-            originQ = str(fairRankingOut[i].originalQualification)
-            quali = str(fairRankingOut[i].qualification)
-            proAttr = str(fairRankingOut[i].isProtected)
-            
-            ranking.append([uid, originQ, quali, proAttr])
-            
-        return ranking
-        
-        #print(ranking)
-        #print(fair01NotSelected)
-        """
-        """
-        with open('../results/' + result_fn,'w',newline='') as mf:
-             writer = csv.writer(mf)
-             writer.writerows(final_scores) 
-        """
-        """
-        print("feldman ranking", end='', flush=True)
-        feldmanRanking, feldmanNotSelected = fair_ranker.create.feldmanRanking(protected, nonProtected, k)
-        print(" [Done]")
-    
-       
-        print(" [Done]")
-        """
