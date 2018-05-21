@@ -48,7 +48,7 @@ def initPAndAlpha(k):
                             (0.2, 0.1),  # no real results, skip in evaluation
                             (0.3, 0.1),  # no real results, skip in evaluation
                             (0.4, 0.1),  # no real results, skip in evaluation
-                            (0.5, 0.0168),
+                            (0.5, 0.0313),
                             (0.6, 0.0321),
                             (0.7, 0.0293),
                             (0.8, 0.0328),

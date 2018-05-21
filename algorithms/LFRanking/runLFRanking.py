@@ -59,17 +59,14 @@ def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
     
     user_N,att_N=data.shape
     
-    print(rez)
-    
     # initialize the clusters
     clusters=np.matrix(rez[0][(2 * att_N) + _k:]).reshape((_k, att_N))
     
-    print(clusters)
     # get the distance between input user X and intermediate clusters Z
     dists_x = LearningFairRankingOptimization.distances(data, clusters, user_N, att_N, _k)
     # compute the probability of each X maps to Z
     Mnk_x= LearningFairRankingOptimization.M_nk(dists_x, user_N, _k)
-    print(Mnk_x)
+    
     fairRanking = calculateFinalEstimateY(Mnk_x, input_scores, clusters, user_N, _k, ranking)
     
     rankingResultsPath = "LFRanking/" + DataSetName + "ranking.csv"

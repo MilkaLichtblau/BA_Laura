@@ -30,59 +30,64 @@ algorithm.
 
 def main():
     
+    """
+    This method starts the whole benchmkaring process. It first reads all 
+    raw data sets and creates CSV files from those.
+    Then it calls the method benchmarkingProcess to run the benchmarks on
+    the implemented algorithms and evalute those with provided measures.
+    The method then
+    
+    """
+    #initialize list for evaluation results
+    results = []
+    
+    #creates a CSV file in preprocessedDataSets as described in csvPreprocessing
+    filePathCredit25 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age25.csv", 2)
+    results += (benchmarkingProcess(filePathCredit25, 100))
+    filePathCredit35 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age35.csv", 2)
+    results += (benchmarkingProcess(filePathCredit35, 100))
+    
+    print(results)
+    
+    
+def benchmarkingProcess(dataSetPath, k):
+    
     #initialize list for evaluation results
     evalResults = []
     
-    #creates a CSV file in preprocessedDataSets as described in csvPreprocessing
-    nameOutCredit25 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age25.csv", 2)
-    nameOutCredit35 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age35.csv", 2)
-    
     #creates Candidates from the preprocessed CSV files in folder preprocessedDataSets
-    protectedCredit25, nonProtectedCredit25, rankingCredit25 = cC.create(nameOutCredit25)
-    protectedCredit35, nonProtectedCredit35, rankingCredit35 = cC.create(nameOutCredit35)
-    
-    createRankingCSV(rankingCredit25, 'ColorBlind/GermanCredit_age25preranking.csv' )
-    createRankingCSV(rankingCredit35, 'ColorBlind/GermanCredit_age35preranking.csv' )
-    
-    lenCredit25 = len(rankingCredit25)
-    lenCredit35 = len(rankingCredit35)
+    protected, nonProtected, originalRanking = cC.create(dataSetPath)
     
     #extract Data set name from path, will have 'pre' for preprocessed at the end
-    creditNameAge25 = extractDataSetName(nameOutCredit25)
-    creditNameAge35 = extractDataSetName(nameOutCredit35)
+    dataSetName = extractDataSetName(dataSetPath)
+    
+    #creates a csv with candidates ranked with color-blind ranking
+    createRankingCSV(originalRanking, 'ColorBlind/' + dataSetName + 'ranking.csv' )
 
-    evalResults.append(runMetrics(100, lenCredit25, protectedCredit25, nonProtectedCredit25, rankingCredit25, creditNameAge25, 'Color-Blind'))
-    evalResults.append(runMetrics(100, lenCredit35, protectedCredit35, nonProtectedCredit35, rankingCredit35, creditNameAge35, 'Color-Blind'))
+    #run the metrics ones for the color-blind ranking
+    evalResults.append(runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
     
     #run evaluations for FAIR
-    #run FAIR algorithm on all available data sets
-    FAIRRankingOutCreditAge25, notSelectedCreditAge25, pathFAIRCreditAge25 = runFAIR(creditNameAge25, protectedCredit25, nonProtectedCredit25, 100)
-    FAIRRankingOutCreditAge35, notSelectedCreditAge35, pathFAIRCreditAge35 = runFAIR(creditNameAge35, protectedCredit35, nonProtectedCredit35, 100)
+    #run FAIR algorithm 
+    FAIRRanking, notSelected, pathFAIR = runFAIR(dataSetName, protected, nonProtected, k)
     #Update the currentIndex of a candidate according to FAIR
-    FAIRRankingOutCreditAge25 = updateCurrentIndex(FAIRRankingOutCreditAge25)
-    FAIRRankingOutCreditAge35 = updateCurrentIndex(FAIRRankingOutCreditAge35)
+    FAIRRanking = updateCurrentIndex(FAIRRanking)
     #create CSV with rankings from FAIR
-    createRankingCSV(FAIRRankingOutCreditAge25, pathFAIRCreditAge25)
-    createRankingCSV(FAIRRankingOutCreditAge35, pathFAIRCreditAge35)
+    createRankingCSV(FAIRRanking, pathFAIR)
     #evaluate FAIR with all available measures
-    evalResults.append(runMetrics(100, lenCredit25, protectedCredit25, nonProtectedCredit25, FAIRRankingOutCreditAge25, creditNameAge25, 'FAIR'))
-    evalResults.append(runMetrics(100, lenCredit35, protectedCredit35, nonProtectedCredit35, FAIRRankingOutCreditAge35, creditNameAge35, 'FAIR'))
-    
+    evalResults.append(runMetrics(k, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
+        
     #run evaluations for LFRanking
-    #run LFRanking algorithm on all available data sets
-    LFRankingOutCreditAge25, pathLFRankingCreditAge25 = runLFRanking(rankingCredit25,protectedCredit25,nonProtectedCredit25,4,creditNameAge25)
-    LFRankingOutCreditAge35, pathLFRankingCreditAge35 = runLFRanking(rankingCredit35,protectedCredit35,nonProtectedCredit35,4,creditNameAge35)    
+    #run LFRanking algorithm
+    LFRanking, pathLFRanking = runLFRanking(originalRanking, protected, nonProtected, 4, dataSetName) 
     #create CSV file with ranking outputs
-    createRankingCSV(LFRankingOutCreditAge25, pathLFRankingCreditAge25)
-    createRankingCSV(LFRankingOutCreditAge35, pathLFRankingCreditAge35)
+    createRankingCSV(LFRanking, pathLFRanking)
     #Update the currentIndex of a candidate according to LFRanking
-    LFRankingOutCreditAge25 = updateCurrentIndex(LFRankingOutCreditAge25)
-    LFRankingOutCreditAge35 = updateCurrentIndex(LFRankingOutCreditAge35)
+    LFRanking = updateCurrentIndex(LFRanking)
     #evaluate LFRanking with all available measures
-    evalResults.append(runMetrics(100, lenCredit25, protectedCredit25, nonProtectedCredit25, LFRankingOutCreditAge25, creditNameAge25, 'LFRanking'))
-    evalResults.append(runMetrics(100, lenCredit35, protectedCredit35, nonProtectedCredit35, LFRankingOutCreditAge35, creditNameAge35, 'LFRanking'))
+    evalResults.append(runMetrics(k, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
     
-    print (evalResults)
+    return evalResults
     
     
 def extractDataSetName(filePath):
