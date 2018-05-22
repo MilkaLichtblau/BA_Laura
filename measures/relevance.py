@@ -5,34 +5,119 @@ Created on Mon May 21 16:12:43 2018
 @author: Laura
 """
 
-import numpy as np
+import math
 
-def binaryLabels(dataSetLength, scores, k):
+def pak(k, ranking):
     
     """
-    Calculates the score at which an item becomes irrelevant. We decide that
-    by a percentile at a certain point and all scores above that percentile
-    are relevant and all scores beneath are irrelevant. We calculate the 
-    point for the percentile as follows: 1 - ((k/2)/dataSetLength)
+    Calculates P@k 
     
-    @param dataSetLenght: Lenght of the original data set
-    @param scores: Scores from the original ranking ordered color-blindly
-    @param k: Truncation point/length of the actual ranking
+    @param k: truncation point/length of the ranking
+    @param ranking: list of candidates selected for the ranking
+    
+    return value for P@k
     """
     
-    scoreArray = np.array(scores)
+    #cut the ranking at the given truncation point k
+    pakRanking = ranking[:k]
     
-    #calculate Percentile
-    q = 1 - ((k/2)/dataSetLength)
-    q = round(q,2)
-    q = q * 100
+    #initialize P@k
+    pak = 0
     
-    p = np.percentile(scoreArray, q)
+    #check if rank in current ranking equals position in color-blind
+    for i in range(k):
+        if pakRanking[i].originalIndex == pakRanking[i].currentIndex:
+            pak += 1
     
-    return p
+    #discount with truncation point
+    pak = pak / k
     
-def mAP(p, rankingLength, scores):
+    return pak
     
-    scoreArray = np.array(scores)
+  
+def ap(k, ranking):
     
+    """
+    Calculate AP
+
+    @param k: truncation point/length of the ranking
+    @param ranking: list of candidates selected for the ranking
     
+    return AP
+    """
+    
+    #initialize changing truncation point for calculation of P@k
+    _k = 0
+    
+    #initialize AP
+    ap = 0
+    
+    #check if rank in current ranking equals position in color-blind
+    for i in range(k):
+        _k += 1
+        if ranking[i].originalIndex == ranking[i].currentIndex:
+            ap += pak(_k, ranking)
+       
+    ap = ap / k
+    
+    return ap
+    
+def calculateMAP(dataSetName, results):
+    """
+    Calculate MAP
+    
+    @param dataSetName: Name of the data set
+    @param results: List with results from earlier calculations
+    
+    return result list with the data set's name, the algorithm's name, MAP,
+    and the value of MAP
+    """
+    #initialize variables
+    qCount = 0
+    ndcgColorBlind = 0
+    ndcgFAIR = 0
+    ndcgLFRanking = 0
+    ndcgResults = []
+    
+    for i in range(len(results)):
+        if dataSetName in results[i][0] and results[i][2] == 'AP':
+            if results[i][1] == 'Color-Blind':
+                ndcgColorBlind += results[i][3]
+                #counts number of queries on one data set
+                qCount +=1
+            elif results[i][1] == 'FAIR':
+                ndcgFAIR += results[i][3]
+            elif results[i][1] == 'LFRanking':
+                ndcgLFRanking += results[i][3]
+    
+    ndcgResults.append([dataSetName, 'Color-Blind', 'MAP', (ndcgColorBlind/qCount)])
+    ndcgResults.append([dataSetName, 'FAIR', 'MAP', (ndcgFAIR/qCount)])
+    ndcgResults.append([dataSetName, 'LFRanking', 'MAP', (ndcgLFRanking/qCount)])
+    
+    return ndcgResults
+    
+
+def nDCG(k, ranking, originalRanking):
+    
+    """
+    Calculate NDCG
+    
+    @param k: truncation point/length of the ranking
+    @param ranking: list of candidates selected for the ranking
+    @param originalRanking: list of candidates from color-blind ranking
+    
+    return NDCG
+    """
+    
+    #initialize params
+    z = 0
+    dCG = 0
+    
+    for i in range(k):
+        z += (2**originalRanking[i].originalQualification - 1) / math.log((1 + i + 1),2)
+        dCG += (2**ranking[i].originalQualification - 1) / math.log((1 + i + 1),2)
+        
+    nDCG = dCG / z
+    
+    return nDCG
+        

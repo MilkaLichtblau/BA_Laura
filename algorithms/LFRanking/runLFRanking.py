@@ -11,9 +11,14 @@ import numpy as np
 from algorithms.LFRanking import LearningFairRankingOptimization
 from algorithms.LFRanking import utility # import for calculation of weighted scores
 
+"""
+Parts of this code taken from https://github.com/DataResponsibly/FairRank/blob/master/optimization.py
+and https://github.com/DataResponsibly/FairRank/blob/master/runOptimization.py
+"""
+
 
 def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
-#def runLFRanking(_csv_fn,_target_col,_sensi_bound,_k): 
+
     """
         Run the optimization process.
         @param ranking: list with candidates that can be used for the ranking
@@ -86,6 +91,7 @@ def calculateFinalEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k, ranking):
         :return: returns the estimated X and loss between input X and estimated X.
     """
     score_hat = np.zeros(_N) # initialize the estimated scores
+    
     # calculate estimate score of each user by mapping probability between X and Z     
     for ui in range(_N):
         score_hat_u = 0.0

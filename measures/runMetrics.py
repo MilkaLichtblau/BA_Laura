@@ -6,6 +6,7 @@ Created on Fri May 18 15:34:40 2018
 """
 
 import measures.calculaterKL as rKL
+import measures.relevance as rel
 
 def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName, algoName):
     
@@ -28,18 +29,22 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     indexRanking = []
     #initialize empty list for positive ranking indices
     proIndex = []
-    #initialize empty list for original ranking scores
+    #initialize empty list for original ranking scores with the lenght of the
+    #data set
     originalScores = []
+    #initialize empyt list for original scores in ranking
+    originalScoresRanking = []
     
     #make sure originalRanking is still ordered color-blindly
-    originalRanking.sort(key=lambda candidate: candidate.orginalQualification, reverse=True)
+    originalRanking.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
     
     for j in range(len(originalRanking)):
         originalScores.append(originalRanking[j].originalQualification)
     
-    #fill lists with values
+    #fill indexRanking and proIndex with values
     for i in range(len(ranking)):
         indexRanking.append(ranking[i].currentIndex)
+        originalScoresRanking.append(ranking[i].originalQualification)
         if ranking[i].isProtected  == True:
             proIndex.append(ranking[i].originalIndex)
     
@@ -47,12 +52,26 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     user_N = len(originalRanking)
     #initialize length of protected group
     pro_N = len(protected)
+    #initialize result list
+    results = []
     
+    #calculate rKL
+    #get the maximal rKL value
     max_rKL=rKL.getNormalizer(user_N,pro_N,dataSetName) 
-    
+    #get evaluation results for rKL
     eval_rKL=rKL.calculateNDFairness(indexRanking, proIndex, k, max_rKL)
+    #append results
+    results.append([dataSetName, algoName, 'rKL', eval_rKL])
     
-    results = [dataSetName, algoName, 'rKL', eval_rKL]
+    #calculate MAP      
+    eval_AP = rel.ap(k, ranking)
+    #append results
+    results.append([dataSetName, algoName, 'AP', eval_AP])
+    
+    #calculate NDCG
+    eval_NDCG = rel.nDCG(k, ranking, originalRanking)
+    #append results
+    results.append([dataSetName, algoName, 'NDCG', eval_NDCG])
     
     return results
 

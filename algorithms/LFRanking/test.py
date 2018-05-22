@@ -25,7 +25,17 @@ sorted_score_hat.sort(reverse=True)
 sorted_inputscores = [1,4,3,4,7,3,9,5,100,4,2,6,8,2,9]
 sorted_inputscores.sort(reverse=True)
 
-print(sorted_score_hat)
-print(sorted_inputscores)
 
-print(round(0.45,1))
+scores = np.array(sorted_score_hat)
+ones = np.ones(scores.shape)
+
+ger = 'GermanCredit_sex'
+name = 'GermanCredit'
+no = 'bla'
+
+if name in ger:
+    print('yaay')
+if no in ger:
+    print('nay')
+if no not in ger:
+    print('this works')

@@ -11,7 +11,7 @@ from csvProcessing.csvPrintRanking import createRankingCSV
 from algorithms.fair_ranker.runRankFAIR import runFAIR
 from algorithms.LFRanking.runLFRanking import runLFRanking
 from measures.runMetrics import runMetrics
-#from candidateCreator.candidate import Candidate
+import measures.relevance as rel
 
 """
 
@@ -46,6 +46,10 @@ def main():
     results += (benchmarkingProcess(filePathCredit25, 100))
     filePathCredit35 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age35.csv", 2)
     results += (benchmarkingProcess(filePathCredit35, 100))
+    filePathCreditSex = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_sex.csv", 2)
+    results += (benchmarkingProcess(filePathCreditSex, 100))
+    
+    results += (rel.calculateMAP('GermanCredit', results))
     
     print(results)
     
@@ -58,14 +62,14 @@ def benchmarkingProcess(dataSetPath, k):
     #creates Candidates from the preprocessed CSV files in folder preprocessedDataSets
     protected, nonProtected, originalRanking = cC.create(dataSetPath)
     
-    #extract Data set name from path, will have 'pre' for preprocessed at the end
+    #extract Data set name from path
     dataSetName = extractDataSetName(dataSetPath)
     
     #creates a csv with candidates ranked with color-blind ranking
     createRankingCSV(originalRanking, 'ColorBlind/' + dataSetName + 'ranking.csv' )
 
     #run the metrics ones for the color-blind ranking
-    evalResults.append(runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
+    evalResults += (runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
     
     #run evaluations for FAIR
     #run FAIR algorithm 
@@ -75,7 +79,7 @@ def benchmarkingProcess(dataSetPath, k):
     #create CSV with rankings from FAIR
     createRankingCSV(FAIRRanking, pathFAIR)
     #evaluate FAIR with all available measures
-    evalResults.append(runMetrics(k, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
+    evalResults += (runMetrics(k, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
         
     #run evaluations for LFRanking
     #run LFRanking algorithm
@@ -85,13 +89,14 @@ def benchmarkingProcess(dataSetPath, k):
     #Update the currentIndex of a candidate according to LFRanking
     LFRanking = updateCurrentIndex(LFRanking)
     #evaluate LFRanking with all available measures
-    evalResults.append(runMetrics(k, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
+    evalResults += (runMetrics(k, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
     
     return evalResults
     
     
 def extractDataSetName(filePath):
     """
+    Extract the name of a data set from a file path
     @param filePath: file path to extract the name of the data set from
     
     return the file name from the given path 
@@ -99,6 +104,7 @@ def extractDataSetName(filePath):
     helper = filePath.split("/")
     dataSetNameAndFormat = helper[-1].split(".")
     dataSetName = dataSetNameAndFormat[0]
+    dataSetName = str.replace(dataSetName, 'pre','')
     
     return dataSetName
 

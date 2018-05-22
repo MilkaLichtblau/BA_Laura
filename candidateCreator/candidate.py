@@ -1,8 +1,13 @@
-'''
-Created on 23.12.2016
+"""
+Created on Thu May 17 14:43:30 2018
 
-@author: meike.zehlike
-'''
+@author: Laura
+"""
+
+"""
+Most parts of this code taken from 
+"""
+
 import uuid
 
 class Candidate(object):
