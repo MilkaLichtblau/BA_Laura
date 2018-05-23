@@ -74,27 +74,27 @@ def calculateMAP(dataSetName, results):
     """
     #initialize variables
     qCount = 0
-    ndcgColorBlind = 0
-    ndcgFAIR = 0
-    ndcgLFRanking = 0
-    ndcgResults = []
+    mapColorBlind = 0
+    mapFAIR = 0
+    mapLFRanking = 0
+    mapResults = []
     
     for i in range(len(results)):
         if dataSetName in results[i][0] and results[i][2] == 'AP':
             if results[i][1] == 'Color-Blind':
-                ndcgColorBlind += results[i][3]
+                mapColorBlind += results[i][3]
                 #counts number of queries on one data set
                 qCount +=1
             elif results[i][1] == 'FAIR':
-                ndcgFAIR += results[i][3]
+                mapFAIR += results[i][3]
             elif results[i][1] == 'LFRanking':
-                ndcgLFRanking += results[i][3]
+                mapLFRanking += results[i][3]
     
-    ndcgResults.append([dataSetName, 'Color-Blind', 'MAP', (ndcgColorBlind/qCount)])
-    ndcgResults.append([dataSetName, 'FAIR', 'MAP', (ndcgFAIR/qCount)])
-    ndcgResults.append([dataSetName, 'LFRanking', 'MAP', (ndcgLFRanking/qCount)])
+    mapResults.append([dataSetName, 'Color-Blind', 'MAP', (mapColorBlind/qCount)])
+    mapResults.append([dataSetName, 'FAIR', 'MAP', (mapFAIR/qCount)])
+    mapResults.append([dataSetName, 'LFRanking', 'MAP', (mapLFRanking/qCount)])
     
-    return ndcgResults
+    return mapResults
     
 
 def nDCG(k, ranking, originalRanking):

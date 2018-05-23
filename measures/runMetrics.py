@@ -7,6 +7,7 @@ Created on Fri May 18 15:34:40 2018
 
 import measures.calculaterKL as rKL
 import measures.relevance as rel
+import measures.calculateDTRandDIR as d
 
 def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName, algoName):
     
@@ -55,14 +56,6 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     #initialize result list
     results = []
     
-    #calculate rKL
-    #get the maximal rKL value
-    max_rKL=rKL.getNormalizer(user_N,pro_N,dataSetName) 
-    #get evaluation results for rKL
-    eval_rKL=rKL.calculateNDFairness(indexRanking, proIndex, k, max_rKL)
-    #append results
-    results.append([dataSetName, algoName, 'rKL', eval_rKL])
-    
     #calculate MAP      
     eval_AP = rel.ap(k, ranking)
     #append results
@@ -72,6 +65,24 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     eval_NDCG = rel.nDCG(k, ranking, originalRanking)
     #append results
     results.append([dataSetName, algoName, 'NDCG', eval_NDCG])
+    
+    #calculate rKL
+    #get the maximal rKL value
+    max_rKL=rKL.getNormalizer(user_N,pro_N,dataSetName) 
+    #get evaluation results for rKL
+    eval_rKL=rKL.calculateNDFairness(indexRanking, proIndex, k, max_rKL)
+    #append results
+    results.append([dataSetName, algoName, 'rKL', eval_rKL])
+    
+    #calculate DTR
+    eval_DTR = d.dTR(ranking, k)
+    #append results
+    results.append([dataSetName, algoName, 'DTR', eval_DTR])
+    
+    #calculate DTR
+    eval_DIR = d.dIR(ranking, k)
+    #append results
+    results.append([dataSetName, algoName, 'DIR', eval_DIR])
     
     return results
 
