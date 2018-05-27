@@ -15,7 +15,9 @@ ALGO_LFRANING = 'LFRanking'
 ALGO_FELDMAN = 'FeldmanEtAl'
 
 #constants for measures
-M_NDCG = 'NDCG'
+M_NDCG1 = 'NDCG@1'
+M_NDCG5 = 'NDCG@5'
+M_NDCG10 = 'NDCG@10'
 M_RKL = 'rKL'
 M_DTR = 'DTR'
 M_DIR = 'DIR'
@@ -49,7 +51,9 @@ def calculateFinalEvaluation(results, fileNames):
     midResults = []
     finalResults = []
     
-    lNDCG = []
+    lNDCG1 = []
+    lNDCG5 = []
+    lNDCG10 = []
     lRKL = []
     lDTR = []
     lDIR = []
@@ -81,36 +85,26 @@ def calculateFinalEvaluation(results, fileNames):
             elif name in row[0]:
                 helpResults.append(row[1:])
         if dataSetDic[name] != 1:
-            hNDCG, hRKL, hDTR, hDIR, hMAP, hAP = getListForMeasureInDataSet(helpResults, algoList)
-            lNDCG += hNDCG
+            hNDCG1,hNDCG5,hNDCG10, hRKL, hDTR, hDIR, hMAP, hAP = getListForMeasureInDataSet(helpResults, algoList)
+            lNDCG1 += hNDCG1
+            lNDCG5 += hNDCG5
+            lNDCG10 += hNDCG10
             lRKL += hRKL
             lDTR += hDTR
             lDIR += hDIR
             lAP += hAP
-            midResults += calculateAverage(lNDCG, lRKL, lDTR, lDIR, lAP, dataSetDic, name, algoList)
+            midResults += calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, dataSetDic, name, algoList)
         
-    
-        
-    for name in querySets:
-        helpResults = []
-        for row in results:
-            if name != row[0]:
-                midResults.append(row)
-            elif name == row[0]:
-                helpResults.append(row[1:])
-                hNDCG, hRKL, hDTR, hDIR, hMAP, hAP = getListForMeasureInDataSet(helpResults, algoList)
-                lNDCG += hNDCG
-                lRKL += hRKL
-                lDTR += hDTR
-                lDIR += hDIR
-                lMAP += hMAP
                 
     
-    lNDCG = []
+    lNDCG1 = []
+    lNDCG5 = []
+    lNDCG10 = []
     lRKL = []
     lDTR = []
     lDIR = []
     lMAP = []
+    lAP = []
     
     #get WN for each data set
     for name in dataSets:
@@ -132,25 +126,27 @@ def calculateFinalEvaluation(results, fileNames):
         #also get IWN once appendet in the list for hNDCG since we always evaluate
         #all measures, hence IWN will be the same for all measures if an evaluation for
         #the data set occured
-        hNDCG, hRKL, hDTR, hDIR, hMAP, hAP = getListForMeasureInDataSet(resultsForWN, algoList)
-        hNDCG, hRKL, hDTR, hDIR, hMAP = compareMeasures(hNDCG, hRKL, hDTR, hDIR, hMAP,algoList)
-        lNDCG += hNDCG
+        hNDCG1,hNDCG5,hNDCG10, hRKL, hDTR, hDIR, hMAP, hAP = getListForMeasureInDataSet(resultsForWN, algoList)
+        hNDCG1,hNDCG5,hNDCG10, hRKL, hDTR, hDIR, hMAP = compareMeasures(hNDCG1,hNDCG5,hNDCG10, hRKL, hDTR, hDIR, hMAP,algoList)
+        lNDCG1 += hNDCG1
+        lNDCG5 += hNDCG5
+        lNDCG10 += hNDCG10
         lRKL += hRKL
         lDTR += hDTR
         lDIR += hDIR
         lMAP += hMAP
     
-    finalResults += calculateNWN(lNDCG, lRKL, lDTR, lDIR, lMAP, algoList)
+    finalResults += calculateNWN(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lMAP, algoList)
     
     return finalResults
     
     
-def calculateAverage(lNDCG, lRKL, lDTR, lDIR, lAP, dataSetDic, dataSetName, algoList):
+def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, dataSetDic, dataSetName, algoList):
     
     """
     Calculates the average values over a set of queries for each measure and algorithm
     
-    @param lNDCG: list with WN for all algorithms for NDCG plus the IWN
+    @param lNDCG: list with WN for all algorithms for NDCG
     @param lRKL: list with WN for all algorithms for rKL
     @param lDTR: list with WN for all algorithms for DTR
     @param lDIR: list with WN for all algorithms for DIR
@@ -168,7 +164,7 @@ def calculateAverage(lNDCG, lRKL, lDTR, lDIR, lAP, dataSetDic, dataSetName, algo
     
     #check whih algorithms were evaluated on this data set
     for algo in algoList:
-        for row in lNDCG:
+        for row in lNDCG1:
             if algo == row[0]:
                 #append actually included algorithms for this data set
                 actualAlgoList.append(algo)
@@ -180,14 +176,20 @@ def calculateAverage(lNDCG, lRKL, lDTR, lDIR, lAP, dataSetDic, dataSetName, algo
     
     
     for algo in actualAlgoList:
-        resNDCG = 0
+        resNDCG1 = 0
+        resNDCG5 = 0
+        resNDCG10 = 0
         resRKL = 0
         resDTR = 0
         resDIR = 0
         resAP = 0
-        for nDCG, rKL, dTR, dIR, aP in zip(lNDCG, lRKL, lDTR, lDIR, lAP):
-            if algo == nDCG[0]:
-                resNDCG += nDCG[2]
+        for nDCG1, nDCG5, nDCG10, rKL, dTR, dIR, aP in zip(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP):
+            if algo == nDCG1[0]:
+                resNDCG1 += nDCG1[2]
+            if algo == nDCG5[0]:
+                resNDCG5 += nDCG5[2]
+            if algo == nDCG10[0]:
+                resNDCG10 += nDCG10[2]    
             if algo == rKL[0]:
                 resRKL += rKL[2]
             if algo == dTR[0]:
@@ -196,7 +198,9 @@ def calculateAverage(lNDCG, lRKL, lDTR, lDIR, lAP, dataSetDic, dataSetName, algo
                 resDIR += dIR[2]
             if algo == aP[0]:
                 resAP += aP[2]
-        results.append([dataSetName, algo, M_NDCG, resNDCG/dataSetDic[dataSetName]])
+        results.append([dataSetName, algo, M_NDCG1, resNDCG1/dataSetDic[dataSetName]])
+        results.append([dataSetName, algo, M_NDCG5, resNDCG5/dataSetDic[dataSetName]])
+        results.append([dataSetName, algo, M_NDCG10, resNDCG10/dataSetDic[dataSetName]])
         results.append([dataSetName, algo, M_MAP, resAP/dataSetDic[dataSetName]])
         results.append([dataSetName, algo, M_RKL, resRKL/dataSetDic[dataSetName]]) 
         results.append([dataSetName, algo, M_DTR, resDTR/dataSetDic[dataSetName]]) 
@@ -206,7 +210,7 @@ def calculateAverage(lNDCG, lRKL, lDTR, lDIR, lAP, dataSetDic, dataSetName, algo
     return results
     
   
-def calculateNWN(lNDCG, lRKL, lDTR, lDIR, lMAP, algoList):
+def calculateNWN(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lMAP, algoList):
         
     """
     @param lNDCG: list with WN for all algorithms for NDCG plus the IWN
@@ -220,7 +224,9 @@ def calculateNWN(lNDCG, lRKL, lDTR, lDIR, lMAP, algoList):
     """
     
     
-    resNDCG = 0
+    resNDCG1 = 0
+    resNDCG5 = 0
+    resNDCG10 = 0
     resRKL = 0
     resDTR = 0
     resDIR = 0
@@ -231,16 +237,22 @@ def calculateNWN(lNDCG, lRKL, lDTR, lDIR, lMAP, algoList):
     resultsNWN = []
     
     for algo in algoList:
-        resNDCG = 0
+        resNDCG1 = 0
+        resNDCG5 = 0
+        resNDCG10 = 0
         resRKL = 0
         resDTR = 0
         resDIR = 0
         resMAP = 0
         idealWinningNumber = 0
-        for nDCG, rKL, dTR, dIR, mAP in zip(lNDCG, lRKL, lDTR, lDIR, lMAP):
-            if algo == nDCG[0]:
-                resNDCG += nDCG[2]
-                idealWinningNumber += nDCG[3]
+        for nDCG1,nDCG5,nDCG10, rKL, dTR, dIR, mAP in zip(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lMAP):
+            if algo == nDCG1[0]:
+                resNDCG1 += nDCG1[2]
+                idealWinningNumber += nDCG1[3]
+            if algo == nDCG5[0]:
+                resNDCG5 += nDCG5[2]
+            if algo == nDCG10[0]:
+                resNDCG10 += nDCG10[2] 
             if algo == rKL[0]:
                 resRKL += rKL[2]
             if algo == dTR[0]:
@@ -249,7 +261,9 @@ def calculateNWN(lNDCG, lRKL, lDTR, lDIR, lMAP, algoList):
                 resDIR += dIR[2]
             if algo == mAP[0]:
                 resMAP += mAP[2]
-        resultsNWN.append(['NWN', algo, M_NDCG, resNDCG/idealWinningNumber])
+        resultsNWN.append(['NWN', algo, M_NDCG1, resNDCG1/idealWinningNumber])
+        resultsNWN.append(['NWN', algo, M_NDCG5, resNDCG5/idealWinningNumber])
+        resultsNWN.append(['NWN', algo, M_NDCG10, resNDCG10/idealWinningNumber])
         resultsNWN.append(['NWN', algo, M_MAP, resMAP/idealWinningNumber])
         resultsNWN.append(['NWN', algo, M_RKL, resRKL/idealWinningNumber])
         resultsNWN.append(['NWN', algo, M_DTR, resDTR/idealWinningNumber])
@@ -271,7 +285,9 @@ def getListForMeasureInDataSet(resultsForWN, algoList):
     """
     
     #initialize lists for each measure
-    comNDCG = []
+    comNDCG1 = []
+    comNDCG5 = []
+    comNDCG10 = []
     comRKL = []
     comDTR = []
     comDIR = []
@@ -281,9 +297,15 @@ def getListForMeasureInDataSet(resultsForWN, algoList):
 
     for row in resultsForWN:
         #check if ndcg
-        if row[1] == M_NDCG:
+        if row[1] == M_NDCG1:
             #save data for comparison
-            comNDCG.append(row)  
+            comNDCG1.append(row) 
+        elif row[1] == M_NDCG5:
+            #save data for comparison
+            comNDCG5.append(row)  
+        elif row[1] == M_NDCG10:
+            #save data for comparison
+            comNDCG10.append(row)  
         #check if rKL
         elif row[1] == M_RKL:
             #save data for comparison
@@ -304,9 +326,9 @@ def getListForMeasureInDataSet(resultsForWN, algoList):
             #save data for comparison
             comAP.append(row) 
     
-    return comNDCG, comRKL, comDTR, comDIR, comMAP, comAP
+    return comNDCG1,comNDCG5,comNDCG10, comRKL, comDTR, comDIR, comMAP, comAP
 
-def compareMeasures(comNDCG,comRKL,comDTR,comDIR,comMAP, algoList):
+def compareMeasures(comNDCG1,comNDCG5,comNDCG10,comRKL,comDTR,comDIR,comMAP, algoList):
     """
     Call comparison methods for each measure
     
@@ -319,28 +341,33 @@ def compareMeasures(comNDCG,comRKL,comDTR,comDIR,comMAP, algoList):
     
     return lists for each measure with its evaluation results from the corresponding methods
     """
-    comNDCG=(compareNDCG(comNDCG, algoList))
-    comRKL=(compareRKL(comRKL, algoList))
-    comDTR=(compareDTR(comDTR, algoList))
-    comDIR=(compareDIR(comDIR, algoList))
-    comMAP=(compareMAP(comMAP, algoList))
+    comNDCG1=(compareGreaterThan(comNDCG1, algoList, M_NDCG1))
+    comNDCG5=(compareGreaterThan(comNDCG5, algoList, M_NDCG5))
+    comNDCG10=(compareGreaterThan(comNDCG10, algoList, M_NDCG10))
+    comRKL=(compareSmallerThan(comRKL, algoList, M_RKL))
+    comDTR=(compareDist(comDTR, algoList, M_DTR))
+    comDIR=(compareDist(comDIR, algoList, M_DIR))
+    comMAP=(compareGreaterThan(comMAP, algoList, M_MAP))
     
-    return comNDCG, comRKL, comDTR, comDIR, comMAP
+    return comNDCG1,comNDCG5,comNDCG10, comRKL, comDTR, comDIR, comMAP
     
-def compareNDCG(compareList, algoList):
+def compareGreaterThan(compareList, algoList, measureName):
     
     """
-    Compare NDCG to receive the Winning Number of all algorithms for NDCG
+    Compare comparison greater than to receive the Winning Number of all 
+    algorithms for NDCG@1, NDCG@5, NDCG@10, and MAP
     Plus get the Ideal Winning Number(IWN) per Algorithm. Since we always
     evaluate all algorithms for all measures if they can be evaluated on a 
-    data set, we assume that the IWN is the same for all measures
+    data set, we assume that the IWN is the same for the other measures (rKL,
+    DIR, DTR) as well
     
     @param compareList: List with all algorithms evaluated on a given data set
-    for NDCG. List looks like [algoName, 'NDCG', valueForMap]
+    for a given measure. List looks like [algoName, measureName, valueForMeasure]
     @param algoList: List with all algorithms in the benchmarking
+    @param measureName: Name of the evaluated measure
     
     returns a list with items as  
-    [algoName, 'NDCG', winning number per algorithm for given data set, IWN]
+    [algoName, measureName, winning number per algorithm for given data set, IWN]
     """
     
     results = []
@@ -357,21 +384,23 @@ def compareNDCG(compareList, algoList):
                     idealWNCount += 1
                     if value > row[2]:
                         algoCount += 1
-        results.append([algo, M_NDCG, algoCount, idealWNCount])
+        results.append([algo, measureName, algoCount, idealWNCount])
         
     return results
 
-def compareRKL(compareList,algoList):
+def compareSmallerThan(compareList,algoList,measureName,):
     
     """
-    Compare rKL to receive the Winning Number of all algorithms for rKL
+    Compares to receive the Winning Number of all algorithms for a smaller than
+    relation such as needed for rKL
     
     @param compareList: List with all algorithms evaluated on a given data set
     for rKL. List looks like [algoName, 'rKL', valueForMap]
     @param algoList: List with all algorithms in the benchmarking
+    @param measureName: Name of the evaluated measure
     
     returns a list with items as  
-    [algoName, 'rKL', winning number per algorithm for given data set]
+    [algoName, measureName, winning number per algorithm for given data set]
     """
     
     results = []
@@ -385,11 +414,11 @@ def compareRKL(compareList,algoList):
                 for row in compareList:
                     if value < row[2]:
                         algoCount +=1
-        results.append([algo, M_RKL, algoCount])
+        results.append([algo, measureName, algoCount])
         
     return results
 
-def compareDTR(compareList, algoList):
+def compareDist(compareList, algoList, measureName,):
     
     """
     Compare DTR to receive the Winning Number of all algorithms for DTR
@@ -397,9 +426,10 @@ def compareDTR(compareList, algoList):
     @param compareList: List with all algorithms evaluated on a given data set
     for DTR. List looks like [algoName, 'DTR', valueForMap]
     @param algoList: List with all algorithms in the benchmarking
+    @param measureName: Name of the evaluated measure
     
     returns a list with items as  
-    [algoName, 'DTR', winning number per algorithm for given data set]
+    [algoName, measureName winning number per algorithm for given data set]
     """
     
     results = []
@@ -413,62 +443,9 @@ def compareDTR(compareList, algoList):
                 for row in compareList:
                     if dist(value) < dist(row[2]):
                         algoCount+= 1
-        results.append([algo, M_DTR, algoCount])
+        results.append([algo, measureName, algoCount])
     return results
-                    
-def compareDIR(compareList, algoList):
-    
-    """
-    Compare DIR to receive the Winning Number of all algorithms for DIR
-    
-    @param compareList: List with all algorithms evaluated on a given data set
-    for DIR. List looks like [algoName, 'DIR', valueForMap]
-    @param algoList: List with all algorithms in the benchmarking
-    
-    returns a list with items as  
-    [algoName, 'DIR', winning number per algorithm for given data set]
-    """
-    
-    results = []
-    algoCount = 0
-    
-    for algo in algoList:
-        algoCount = 0
-        for row in compareList:
-            if algo == row[0]:
-                value = row[2]
-                for row in compareList:
-                    if dist(value) < dist(row[2]):
-                        algoCount+=1
-        results.append([algo, M_DIR,algoCount])
-    return results
-    
-def compareMAP(compareList, algoList):
-    
-    """
-    Compare MAP to receive the Winning Number of all algorithms for MAP
-    
-    @param compareList: List with all algorithms evaluated on a given data set
-    for MAP. List looks like [algoName, 'MAP', valueForMap]
-    @param algoList: List with all algorithms in the benchmarking
-    
-    returns a list with items as  
-    [algoName, 'MAP', winning number per algorithm for given data set]
-    """
-    
-    results = []
-    algoCount = 0
-    
-    for algo in algoList:
-        algoCount = 0
-        for row in compareList:
-            if algo == row[0]:
-                value = row[2]
-                for row in compareList:
-                    if value > row[2]:
-                        algoCount +=1
-        results.append([algo, M_MAP,algoCount])
-    return results
+
                     
 def dist(val):
     
@@ -486,10 +463,9 @@ def dist(val):
         return val - 1                
                 
                 
-"""   
-results = [['GermanCreditAge_25', 'Color-Blind', 'AP', 1.0], ['GermanCreditAge_25', 'Color-Blind', 'NDCG', 1.0], ['GermanCreditAge_25', 'Color-Blind', 'rKL', 0.0019415156418714987], ['GermanCreditAge_25', 'Color-Blind', 'DTR', 0.9513075970964544], ['GermanCreditAge_25', 'Color-Blind', 'DIR', 0.9394417693807077], ['GermanCredit_Age25', 'FeldmanEtAl', 'AP', 1.0], ['GermanCredit_Age25', 'FeldmanEtAl', 'NDCG', 0.9940294681008911], ['GermanCredit_Age25', 'FeldmanEtAl', 'rKL', 0.0017166872359973236], ['GermanCredit_Age25', 'FeldmanEtAl', 'DTR', 0.8508150326312649], ['GermanCredit_Age25', 'FeldmanEtAl', 'DIR', 0.8109361787503478], ['GermanCredit_Age25', 'FAIR', 'AP', 0.00774059274059274], ['GermanCredit_Age25', 'FAIR', 'NDCG', 0.9898008868890052], ['GermanCredit_Age25', 'FAIR', 'rKL', 0.001685462935765634], ['GermanCredit_Age25', 'FAIR', 'DTR', 1.1557388518132612], ['GermanCredit_Age25', 'FAIR', 'DIR', 1.0940549790492724], ['GermanCredit_Age25', 'LFRanking', 'AP', 1.0], ['GermanCredit_Age25', 'LFRanking', 'NDCG', 1.0], ['GermanCredit_Age25', 'LFRanking', 'rKL', 0.0019415156418714987], ['GermanCredit_Age25', 'LFRanking', 'DTR', 0.9513075970964544], ['GermanCredit_Age25', 'LFRanking', 'DIR', 0.9394417693807077], ['GermanCredit_Age35', 'Color-Blind', 'AP', 1.0], ['GermanCredit_Age35', 'Color-Blind', 'NDCG', 1.0], ['GermanCredit_Age35', 'Color-Blind', 'rKL', 0.013221817354072955], ['GermanCredit_Age35', 'Color-Blind', 'DTR', 1.0254952326065843], ['GermanCredit_Age35', 'Color-Blind', 'DIR', 1.0294769735762885], ['GermanCredit_Age35', 'FeldmanEtAl', 'AP', 1.0], ['GermanCredit_Age35', 'FeldmanEtAl', 'NDCG', 0.9821805792350532], ['GermanCredit_Age35', 'FeldmanEtAl', 'rKL', 0.016581041467974518], ['GermanCredit_Age35', 'FeldmanEtAl', 'DTR', 0.7609134808537342], ['GermanCredit_Age35', 'FeldmanEtAl', 'DIR', 0.7061008645947737], ['GermanCredit_Age35', 'FAIR', 'AP', 0.0], ['GermanCredit_Age35', 'FAIR', 'NDCG', 0.9821805792350532], ['GermanCreditAge_35', 'FAIR', 'rKL', 0.00520983810847107], ['GermanCredit_Age35', 'FAIR', 'DTR', 1.1083207622873845], ['GermanCredit_Age35', 'FAIR', 'DIR', 1.0406462482475403], ['GermanCredit_Age35', 'LFRanking', 'AP', 1.0], ['GermanCredit_Age35', 'LFRanking', 'NDCG', 1.0], ['GermanCredit_Age35', 'LFRanking', 'rKL', 0.013221817354072955], ['GermanCredit_Age35', 'LFRanking', 'DTR', 1.0254952326065843], ['GermanCredit_Age35', 'LFRanking', 'DIR', 1.0294769735762885], ['GermanlCreditSex', 'Color-Blind', 'AP', 1.0], ['GermanlCreditSex', 'Color-Blind', 'NDCG', 1.0], ['GermanlCreditSex', 'Color-Blind', 'rKL', 0.0008560666111084664], ['GermanlCreditSex', 'Color-Blind', 'DTR', 1.0522788238170926], ['GermanlCreditSex', 'Color-Blind', 'DIR', 1.066408846804308], ['GermanlCreditSex', 'FeldmanEtAl', 'AP', 1.0], ['GermanlCreditSex', 'FeldmanEtAl', 'NDCG', 0.9985107454401517], ['GermanlCreditSex', 'FeldmanEtAl', 'rKL', 0.013239711180642978], ['GermanlCreditSex', 'FeldmanEtAl', 'DTR', 1.1105073352926267], ['GermanlCreditSex', 'FeldmanEtAl', 'DIR', 1.1413786061494602], ['GermanlCreditSex', 'FAIR', 'AP', 0.02660704156954157], ['GermanlCreditSex', 'FAIR', 'NDCG', 0.9985107454401517], ['GermanlCreditSex', 'FAIR', 'rKL', 0.0], ['GermanlCreditSex', 'FAIR', 'DTR', 0.9862620820134426], ['GermanlCreditSex', 'FAIR', 'DIR', 1.0091629255201566], ['GermanlCreditSex', 'LFRanking', 'AP', 1.0], ['GermanlCreditSex', 'LFRanking', 'NDCG', 1.0], ['GermanlCreditSex', 'LFRanking', 'rKL', 0.0008560666111084664], ['GermanlCreditSex', 'LFRanking', 'DTR', 1.0522788238170926], ['GermanlCreditSex', 'LFRanking', 'DIR', 1.066408846804308]]
+"""
+results = [['GermanCreditAge25', 'Color-Blind', 'AP', 1.0], ['GermanCreditAge25', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditAge25', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditAge25', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditAge25', 'Color-Blind', 'rKL', 0.0019415156418714987], ['GermanCreditAge25', 'Color-Blind', 'DTR', 0.9513075970964544], ['GermanCreditAge25', 'Color-Blind', 'DIR', 0.9394417693807077], ['GermanCreditAge25', 'FeldmanEtAl', 'AP', 1.0], ['GermanCreditAge25', 'FeldmanEtAl', 'NDCG@1', 0.8739393159214142], ['GermanCreditAge25', 'FeldmanEtAl', 'NDCG@1', 0.9754038016556424], ['GermanCreditAge25', 'FeldmanEtAl', 'NDCG@1', 0.9849148987659252], ['GermanCreditAge25', 'FeldmanEtAl', 'rKL', 0.0017166872359973236], ['GermanCreditAge25', 'FeldmanEtAl', 'DTR', 0.8508150326312649], ['GermanCreditAge25', 'FeldmanEtAl', 'DIR', 0.8109361787503478], ['GermanCreditAge25', 'FAIR', 'AP', 0.00774059274059274], ['GermanCreditAge25', 'FAIR', 'NDCG@1', 0.8739393159214142], ['GermanCreditAge25', 'FAIR', 'NDCG@1', 0.9754038016556424], ['GermanCreditAge25', 'FAIR', 'NDCG@1', 0.9849148987659252], ['GermanCreditAge25', 'FAIR', 'rKL', 0.001685462935765634], ['GermanCreditAge25', 'FAIR', 'DTR', 1.1557388518132612], ['GermanCreditAge25', 'FAIR', 'DIR', 1.0940549790492724], ['GermanCreditAge25', 'LFRanking', 'AP', 1.0], ['GermanCreditAge25', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditAge25', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditAge25', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditAge25', 'LFRanking', 'rKL', 0.0019415156418714987], ['GermanCreditAge25', 'LFRanking', 'DTR', 0.9513075970964544], ['GermanCreditAge25', 'LFRanking', 'DIR', 0.9394417693807077], ['GermanCreditAge35', 'Color-Blind', 'AP', 1.0], ['GermanCreditAge35', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditAge35', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditAge35', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditAge35', 'Color-Blind', 'rKL', 0.013221817354072955], ['GermanCreditAge35', 'Color-Blind', 'DTR', 1.0254952326065843], ['GermanCreditAge35', 'Color-Blind', 'DIR', 1.0294769735762885], ['GermanCreditAge35', 'FeldmanEtAl', 'AP', 1.0], ['GermanCreditAge35', 'FeldmanEtAl', 'NDCG@1', 0.9258636625654516], ['GermanCreditAge35', 'FeldmanEtAl', 'NDCG@1', 0.9852813755214475], ['GermanCreditAge35', 'FeldmanEtAl', 'NDCG@1', 0.9887933280160903], ['GermanCreditAge35', 'FeldmanEtAl', 'rKL', 0.016581041467974518], ['GermanCreditAge35', 'FeldmanEtAl', 'DTR', 0.7609134808537342], ['GermanCreditAge35', 'FeldmanEtAl', 'DIR', 0.7061008645947737], ['GermanCreditAge35', 'FAIR', 'AP', 0.0], ['GermanCreditAge35', 'FAIR', 'NDCG@1', 0.9258636625654516], ['GermanCreditAge35', 'FAIR', 'NDCG@1', 0.9852813755214475], ['GermanCreditAge35', 'FAIR', 'NDCG@1', 0.9887933280160903], ['GermanCreditAge35', 'FAIR', 'rKL', 0.00520983810847107], ['GermanCreditAge35', 'FAIR', 'DTR', 1.1083207622873845], ['GermanCreditAge35', 'FAIR', 'DIR', 1.0406462482475403], ['GermanCreditAge35', 'LFRanking', 'AP', 1.0], ['GermanCreditAge35', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditAge35', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditAge35', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditAge35', 'LFRanking', 'rKL', 0.013221817354072955], ['GermanCreditAge35', 'LFRanking', 'DTR', 1.0254952326065843], ['GermanCreditAge35', 'LFRanking', 'DIR', 1.0294769735762885], ['GermanCreditSex', 'Color-Blind', 'AP', 1.0], ['GermanCreditSex', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditSex', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditSex', 'Color-Blind', 'NDCG@1', 1.0], ['GermanCreditSex', 'Color-Blind', 'rKL', 0.0008560666111084664], ['GermanCreditSex', 'Color-Blind', 'DTR', 1.0522788238170926], ['GermanCreditSex', 'Color-Blind', 'DIR', 1.066408846804308], ['GermanCreditSex', 'FeldmanEtAl', 'AP', 1.0], ['GermanCreditSex', 'FeldmanEtAl', 'NDCG@1', 1.0], ['GermanCreditSex', 'FeldmanEtAl', 'NDCG@1', 0.9938374232707657], ['GermanCreditSex', 'FeldmanEtAl', 'NDCG@1', 0.9969806736276445], ['GermanCreditSex', 'FeldmanEtAl', 'rKL', 0.013239711180642978], ['GermanCreditSex', 'FeldmanEtAl', 'DTR', 1.1105073352926267], ['GermanCreditSex', 'FeldmanEtAl', 'DIR', 1.1413786061494602], ['GermanCreditSex', 'FAIR', 'AP', 0.02660704156954157], ['GermanCreditSex', 'FAIR', 'NDCG@1', 1.0], ['GermanCreditSex', 'FAIR', 'NDCG@1', 0.9938374232707657], ['GermanCreditSex', 'FAIR', 'NDCG@1', 0.9969806736276445], ['GermanCreditSex', 'FAIR', 'rKL', 0.0], ['GermanCreditSex', 'FAIR', 'DTR', 0.9862620820134426], ['GermanCreditSex', 'FAIR', 'DIR', 1.0091629255201566], ['GermanCreditSex', 'LFRanking', 'AP', 1.0], ['GermanCreditSex', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditSex', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditSex', 'LFRanking', 'NDCG@1', 1.0], ['GermanCreditSex', 'LFRanking', 'rKL', 0.0008560666111084664], ['GermanCreditSex', 'LFRanking', 'DTR', 1.0522788238170926], ['GermanCreditSex', 'LFRanking', 'DIR', 1.066408846804308]]
 
 
-calculateFinalEvaluation(results, ['GermanlCreditSex.csv','GermanCredit_Age25.csv','GermanCredit_Age35.csv'])
-
+calculateFinalEvaluation(results, ['GermanlCreditSex.csv','GermanCreditAge25.csv','GermanCreditAge35.csv'])
 """

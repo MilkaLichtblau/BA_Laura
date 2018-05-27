@@ -61,10 +61,20 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     #append results
     results.append([dataSetName, algoName, 'AP', eval_AP])
     
-    #calculate NDCG
-    eval_NDCG = rel.nDCG(k, ranking, originalRanking)
+    #calculate NDCG@1
+    eval_NDCG = rel.nDCG(1, ranking, originalRanking)
     #append results
-    results.append([dataSetName, algoName, 'NDCG', eval_NDCG])
+    results.append([dataSetName, algoName, 'NDCG@1', eval_NDCG])
+    
+    #calculate NDCG@5
+    eval_NDCG = rel.nDCG(5, ranking, originalRanking)
+    #append results
+    results.append([dataSetName, algoName, 'NDCG@5', eval_NDCG])
+    
+    #calculate NDCG@10
+    eval_NDCG = rel.nDCG(10, ranking, originalRanking)
+    #append results
+    results.append([dataSetName, algoName, 'NDCG@10', eval_NDCG])
     
     #calculate rKL
     #get the maximal rKL value

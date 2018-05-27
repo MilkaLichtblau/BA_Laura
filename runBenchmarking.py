@@ -47,6 +47,7 @@ def main():
     results = []
     finalResults = []
     fileNames = []
+    
     """
     paths = []
 
@@ -62,20 +63,28 @@ def main():
                     filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + files, 2)
                     results += (scoreBasedEval(filePathCredit25, 100))
     """
-    
+    """
+    for dirpath, dirnames, files in os.walk("learningDataSets//"):
+        for name in files:
+            if 'csv' in name:
+                fileNames.append(name)
+                filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
+                results += (scoreBasedEval(filePathCredit25, 100))
+    """
     for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
         for name in files:
             if 'csv' in name:
                 fileNames.append(name)
                 filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
                 results += (scoreBasedEval(filePathCredit25, 100))
+                
     
     finalResults = finalEval.calculateFinalEvaluation(results, fileNames)                
     
     with open('results/evaluationResults.csv','w',newline='') as mf:
              writer = csv.writer(mf)
              writer.writerows(finalResults) 
-
+    
     
 def scoreBasedEval(dataSetPath, k):
     
@@ -94,7 +103,7 @@ def scoreBasedEval(dataSetPath, k):
     evalResults = []
     
     #creates Candidates from the preprocessed CSV files in folder preprocessedDataSets
-    protected, nonProtected, originalRanking = cC.create(dataSetPath)
+    protected, nonProtected, originalRanking = cC.createScoreBased(dataSetPath)
     
     #extract Data set name from path
     dataSetName = extractDataSetName(dataSetPath)
