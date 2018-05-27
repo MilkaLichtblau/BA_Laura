@@ -10,8 +10,11 @@ from candidateCreator.createCandidate import createCandidate as cC
 from csvProcessing.csvPrintRanking import createRankingCSV
 from algorithms.fair_ranker.runRankFAIR import runFAIR
 from algorithms.LFRanking.runLFRanking import runLFRanking
+from algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
 from measures.runMetrics import runMetrics
 import measures.relevance as rel
+import measures.normalizedWinningNumber as nWN
+import os
 
 """
 
@@ -26,6 +29,8 @@ each algorithm should be evaluated completely for one data set (run, CSV creatio
 and measure evalution) before the candidate list is passed on to the next 
 algorithm.
 
+IMPORTANT: An underscore in a file name denotes a query in our framework, hence
+the file will be treated and evaluated as if it belonged to one data set
 """
 
 def main():
@@ -40,21 +45,69 @@ def main():
     """
     #initialize list for evaluation results
     results = []
+    finalResults = []
+    fileNames = []
+    """
+    paths = []
+
+    for dirpath, dirnames, files in os.walk('scoredDataSets/'):
+        if dirnames != []:
+            paths += dirnames
+            print(paths)
+
+    for folder in paths:
+        for dirpath, dirname, files in os.walk('scoredDataSets/' + folder + '/'):
+            print(files)
+                if folder == 'GermanCredit':
+                    filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + files, 2)
+                    results += (scoreBasedEval(filePathCredit25, 100))
+    """
     
+    for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
+        for name in files:
+            if 'csv' in name:
+                fileNames.append(name)
+                filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
+                results += (scoreBasedEval(filePathCredit25, 100))
+                
+        
+                
+                #results += ["scoreDataSets/GermanCredit/" + name]
+    
+    
+    print(results)
+     
+    #finalResults = calculateFinalEvaluation(results, fileNames)
+    
+    """
     #creates a CSV file in preprocessedDataSets as described in csvPreprocessing
-    filePathCredit25 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age25.csv", 2)
-    results += (benchmarkingProcess(filePathCredit25, 100))
-    filePathCredit35 = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_age35.csv", 2)
-    results += (benchmarkingProcess(filePathCredit35, 100))
-    filePathCreditSex = cP.createScoreOrderedCSV("dataSets/GermanCredit/GermanCredit_sex.csv", 2)
-    results += (benchmarkingProcess(filePathCreditSex, 100))
+    filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/GermanCreditAge25.csv", 2)
+    results += (scoreBasedEval(filePathCredit25, 100))
+    
+    filePathCredit35 = cP.createScoreOrderedCSV("dataSets/alreadyScored/GermanCredit/GermanCredit_age35.csv", 2)
+    results += (scoreBasedEval(filePathCredit35, 100))
+    filePathCreditSex = cP.createScoreOrderedCSV("dataSets/alreadyScored/GermanCredit/GermanCredit_sex.csv", 2)
+    results += (scoreBasedEval(filePathCreditSex, 100))
     
     results += (rel.calculateMAP('GermanCredit', results))
     
+    #nWN.calculateNWN(results)
+    
     print(results)
+    """
     
+def scoreBasedEval(dataSetPath, k):
     
-def benchmarkingProcess(dataSetPath, k):
+    """
+    Starts the optimization and evaluation of the post-processing methods
+    
+    @param dataSetPath: Path of the data sets storing scores in the first column and
+    membership of the sensitive group in the second column
+    @param k: Provides the length of the ranking
+    
+    returns a list of evaluation results of the form:
+        [dataSetName, Optimization Algorithm, Measure, Value of Measure]
+    """
     
     #initialize list for evaluation results
     evalResults = []
@@ -67,9 +120,15 @@ def benchmarkingProcess(dataSetPath, k):
     
     #creates a csv with candidates ranked with color-blind ranking
     createRankingCSV(originalRanking, 'ColorBlind/' + dataSetName + 'ranking.csv' )
-
     #run the metrics ones for the color-blind ranking
     evalResults += (runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
+    
+    #create ranking like Feldman et al.
+    feldRanking, pathFeldman = feldmanRanking(protected, nonProtected, k, dataSetName)
+    #create CSV with rankings from FAIR
+    createRankingCSV(feldRanking, pathFeldman)
+    #evaluate FAIR with all available measures
+    evalResults += (runMetrics(k, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
     
     #run evaluations for FAIR
     #run FAIR algorithm 

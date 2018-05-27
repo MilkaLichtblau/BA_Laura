@@ -68,7 +68,7 @@ class csvPreprocessing():
         #extracting file name and creating output file path
         outFile = rawFilepath.split("/")
         outFile = outFile[-1].split(".")
-        outFilePath = "preprocessedDataSets/" + outFile[0] + "pre.csv"
+        outFilePath = "preprocessedScoreSets/" + outFile[0] + "pre.csv"
         
         #write scores and labels to a csv file
         with open(outFilePath, 'w', newline='') as csvOut:
