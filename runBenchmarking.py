@@ -12,8 +12,8 @@ from algorithms.fair_ranker.runRankFAIR import runFAIR
 from algorithms.LFRanking.runLFRanking import runLFRanking
 from algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
 from measures.runMetrics import runMetrics
-import measures.relevance as rel
-import measures.normalizedWinningNumber as nWN
+import csv
+import measures.finalEvaluation as finalEval
 import os
 
 """
@@ -69,32 +69,13 @@ def main():
                 fileNames.append(name)
                 filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
                 results += (scoreBasedEval(filePathCredit25, 100))
-                
-        
-                
-                #results += ["scoreDataSets/GermanCredit/" + name]
     
+    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)                
     
-    print(results)
-     
-    #finalResults = calculateFinalEvaluation(results, fileNames)
-    
-    """
-    #creates a CSV file in preprocessedDataSets as described in csvPreprocessing
-    filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/GermanCreditAge25.csv", 2)
-    results += (scoreBasedEval(filePathCredit25, 100))
-    
-    filePathCredit35 = cP.createScoreOrderedCSV("dataSets/alreadyScored/GermanCredit/GermanCredit_age35.csv", 2)
-    results += (scoreBasedEval(filePathCredit35, 100))
-    filePathCreditSex = cP.createScoreOrderedCSV("dataSets/alreadyScored/GermanCredit/GermanCredit_sex.csv", 2)
-    results += (scoreBasedEval(filePathCreditSex, 100))
-    
-    results += (rel.calculateMAP('GermanCredit', results))
-    
-    #nWN.calculateNWN(results)
-    
-    print(results)
-    """
+    with open('results/evaluationResults.csv','w',newline='') as mf:
+             writer = csv.writer(mf)
+             writer.writerows(finalResults) 
+
     
 def scoreBasedEval(dataSetPath, k):
     
