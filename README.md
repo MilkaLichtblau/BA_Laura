@@ -1,19 +1,31 @@
-# BA_Laura
+# BA_Laura: Benchmarking for Fair Machine Learning Algorithms
 
-Benchmarking for Fair Machine Learning Algorithms
-
-This repository provides a framework with benchmarks for four fair ranking algorithms.
+This repository provides a framework for benchmarking fair ranking algorithms. It is possible to benchmark fair learning to rank algorithms (inprocessing) as well as fair optimization algorithms (post-processing). We implemented four post-processing algorithms alongside three baseline algorithms.
 
 Data sets:
 
 GermanCredit data !Referenz to be included!
 ProPublica !Referenz to be included!
-Xing !Referenz to be included!
+Xing
+W3C
 
-Algorithms:
 
-FAI\*R Zehlike et al.
-Learning Fair Ranking Yang and Stoyanovich
+Fair Ranking Algorithms:
+
+In-processing:
+
+Post-processing:
+FA\*IR Zehlike et al.
+Learning Fair Ranking (LFRanking) Yang and Stoyanovich
+
+Baseline Algorithms:
+
+Learning:
+ListNet
+
+Score-ordering:
+Color-blind
+Feldman et al.
 
 Measures:
 

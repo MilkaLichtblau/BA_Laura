@@ -5,15 +5,15 @@ Created on Thu May 17 14:43:30 2018
 @author: Laura
 """
 
-from csvProcessing.csvPreprocessing import csvPreprocessing as cP
-from candidateCreator.createCandidate import createCandidate as cC
-from csvProcessing.csvPrintRanking import createRankingCSV
-from algorithms.fair_ranker.runRankFAIR import runFAIR
-from algorithms.LFRanking.runLFRanking import runLFRanking
-from algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
-from measures.runMetrics import runMetrics
+from src.csvProcessing.csvPreprocessing import csvPreprocessing as cP
+from src.candidateCreator.createCandidate import createCandidate as cC
+from src.csvProcessing.csvPrintRanking import createRankingCSV
+from src.algorithms.fair_ranker.runRankFAIR import runFAIR
+from src.algorithms.LFRanking.runLFRanking import runLFRanking
+from src.algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
+from src.measures.runMetrics import runMetrics
 import csv
-import measures.finalEvaluation as finalEval
+import src.measures.finalEvaluation as finalEval
 import os
 
 """
@@ -79,7 +79,9 @@ def main():
                 results += (scoreBasedEval(filePathCredit25, 100))
                 
     
-    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)                
+    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)      
+
+    print (finalResults)          
     
     with open('results/evaluationResults.csv','w',newline='') as mf:
              writer = csv.writer(mf)
@@ -109,14 +111,14 @@ def scoreBasedEval(dataSetPath, k):
     dataSetName = extractDataSetName(dataSetPath)
     
     #creates a csv with candidates ranked with color-blind ranking
-    createRankingCSV(originalRanking, 'ColorBlind/' + dataSetName + 'ranking.csv' )
+    createRankingCSV(originalRanking, 'ColorBlind/' + dataSetName + 'ranking.csv',k )
     #run the metrics ones for the color-blind ranking
     evalResults += (runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
     
     #create ranking like Feldman et al.
     feldRanking, pathFeldman = feldmanRanking(protected, nonProtected, k, dataSetName)
     #create CSV with rankings from FAIR
-    createRankingCSV(feldRanking, pathFeldman)
+    createRankingCSV(feldRanking, pathFeldman,k)
     #evaluate FAIR with all available measures
     evalResults += (runMetrics(k, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
     
@@ -126,7 +128,7 @@ def scoreBasedEval(dataSetPath, k):
     #Update the currentIndex of a candidate according to FAIR
     FAIRRanking = updateCurrentIndex(FAIRRanking)
     #create CSV with rankings from FAIR
-    createRankingCSV(FAIRRanking, pathFAIR)
+    createRankingCSV(FAIRRanking, pathFAIR,k)
     #evaluate FAIR with all available measures
     evalResults += (runMetrics(k, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
         
@@ -134,7 +136,7 @@ def scoreBasedEval(dataSetPath, k):
     #run LFRanking algorithm
     LFRanking, pathLFRanking = runLFRanking(originalRanking, protected, nonProtected, 4, dataSetName) 
     #create CSV file with ranking outputs
-    createRankingCSV(LFRanking, pathLFRanking)
+    createRankingCSV(LFRanking, pathLFRanking,k)
     #Update the currentIndex of a candidate according to LFRanking
     LFRanking = updateCurrentIndex(LFRanking)
     #evaluate LFRanking with all available measures
