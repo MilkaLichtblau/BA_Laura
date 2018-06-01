@@ -21,45 +21,25 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     
     """
     
-    needToCreateCSVWithP = True
-    
     if k > 40:
         k = 40
         print('Calculation of P for k larger than 40 will not yield any results but just crash the program. Therefore k will be set to 40.')
     
     if algoName == 'FOEIR-DIC':
-        filepath = 'doublyStochasticPropMatrix/FOEIR-DIC/' + dataSetName + str(k) + '.csv'
-        
-        if os.path.exists(filepath) == True and '_' not in filepath:
-            x = readPFromFile(filepath, algoName)
-            needToCreateCSVWithP = False
-        else:
-            x = solveLPWithDIC(ranking, k)
+
+        x = solveLPWithDIC(ranking, k)
     elif algoName == 'FOEIR-DPC':
-    
-        filepath = 'doublyStochasticPropMatrix/FOEIR-DPC/' + dataSetName + str(k) + '.csv'
         
-        if os.path.exists(filepath) == True and '_' not in filepath:
-            x = readPFromFile(filepath, algoName)
-            needToCreateCSVWithP = False
-        else:
-            x = solveLPWithDIC(ranking, k)
+        x = solveLPWithDIC(ranking, k)
     elif algoName == 'FOEIR-DTC':
         
-        filepath = 'doublyStochasticPropMatrix/FOEIR-DTC/' + dataSetName + str(k) + '.csv'
-        
-        if os.path.exists(filepath) == True and '_' not in filepath:
-            x = readPFromFile(filepath, algoName)
-            needToCreateCSVWithP = False
-        else:
-            x = solveLPWithDIC(ranking, k)
+        x = solveLPWithDIC(ranking, k)
         
     x = np.reshape(x,(k,k))
 
     x = np.asarray(x, dtype='float64')
 
-    if needToCreateCSVWithP == True:
-        createPCSV(x, dataSetName, algoName, k)
+    createPCSV(x, dataSetName, algoName, k)
     
     newRanking = createRanking(x, ranking, k)
     
