@@ -16,7 +16,7 @@ from src.algorithms.LFRanking import utility # import for calculation of weighte
 # Part of optimization code refers from github https://github.com/zjelveh/learning-fair-representations/blob/master/lfr.py 
 
 
-@jit
+#@jit
 def distances(_X, _clusters, _N, _P, _k): 
     """
         Calculate the distance between input X and clusters Z.

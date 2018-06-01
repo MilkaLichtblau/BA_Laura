@@ -13,6 +13,9 @@ ALGO_COLORBLIND = 'Color-Blind'
 ALGO_FAIR = 'FAIR'
 ALGO_LFRANING = 'LFRanking'
 ALGO_FELDMAN = 'FeldmanEtAl'
+ALGO_FOEIRDPC = 'FOEIR-DPC'
+ALGO_FOEIRDTC = 'FOEIR-DTC'
+ALGO_FOEIRDIC = 'FOEIR-DIC'
 
 #constants for measures
 M_NDCG1 = 'NDCG@1'
@@ -43,7 +46,7 @@ def calculateFinalEvaluation(results, fileNames):
         ['NWN', algorithmName, measureName, valueOfNWNforMeasureAndAlgo]
     """
     
-    algoList = [ALGO_COLORBLIND,ALGO_FAIR,ALGO_LFRANING,ALGO_FELDMAN]
+    algoList = [ALGO_COLORBLIND,ALGO_FAIR,ALGO_LFRANING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC]
     
     dataSets = []
     querySets = []

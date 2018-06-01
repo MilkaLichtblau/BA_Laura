@@ -37,6 +37,10 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     return list with the name of the data set, the baselineAlgorithm, 
     """
     
+    if k != 40 and k != 100 and k != 1000 and k != 1500:
+        print('Cannot obtain alpha adjustment, for k='+str(k)+ 'Setting it to 40 as default.')
+        k = 40
+    
     #initialize empty list for ranking indices
     indexRanking = []
     #initialize empty list for positive ranking indices
@@ -95,17 +99,10 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     #append results
     results.append([dataSetName, algoName, 'rKL', eval_rKL])
     
-    #calculate DTR
-    eval_DTR = d.dTR(ranking, k)
-    #append results
-    results.append([dataSetName, algoName, 'DTR', eval_DTR])
+    #calculate DTR and DIR and return their results
+    results += d.calculatedTRandDIR(ranking, algoName, dataSetName, k = 100)
     
-    #calculate DTR
-    eval_DIR = d.dIR(ranking, k)
-    #append results
-    results.append([dataSetName, algoName, 'DIR', eval_DIR])
-    
-    
+    #calculate Fairnes@k
     eval_FairnessAtK = ftak.fairnessTestAtK(dataSetName, ranking, protected, unprotected, k)
     
     results.append([dataSetName, algoName, 'FairnessAtK', eval_FairnessAtK])

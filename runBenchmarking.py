@@ -7,10 +7,11 @@ Created on Thu May 17 14:43:30 2018
 
 from src.csvProcessing.csvPreprocessing import csvPreprocessing as cP
 from src.candidateCreator.createCandidate import createCandidate as cC
-from src.csvProcessing.csvPrintRanking import createRankingCSV
+from src.csvProcessing.csvPrinting import createRankingCSV
 from src.algorithms.fair_ranker.runRankFAIR import runFAIR
 from src.algorithms.LFRanking.runLFRanking import runLFRanking
 from src.algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
+from src.algorithms.FOEIR.runFOEIR import runFOEIR
 from src.measures.runMetrics import runMetrics
 import csv
 import src.measures.finalEvaluation as finalEval
@@ -111,9 +112,10 @@ def scoreBasedEval(dataSetPath, k):
     dataSetName = extractDataSetName(dataSetPath)
     
     #creates a csv with candidates ranked with color-blind ranking
-    createRankingCSV(originalRanking, 'ColorBlind/' + dataSetName + 'ranking.csv',k )
+    createRankingCSV(originalRanking, 'Color-Blind/' + dataSetName + 'ranking.csv',k )
     #run the metrics ones for the color-blind ranking
     evalResults += (runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
+    
     
     #create ranking like Feldman et al.
     feldRanking, pathFeldman = feldmanRanking(protected, nonProtected, k, dataSetName)
@@ -121,6 +123,18 @@ def scoreBasedEval(dataSetPath, k):
     createRankingCSV(feldRanking, pathFeldman,k)
     #evaluate FAIR with all available measures
     evalResults += (runMetrics(k, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
+    
+    #run evaluations for FOEIR with different Fairness Constraints
+    #run for FOEIR-DPC
+    dpcRanking, dpcPath = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', 40)
+    evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
+    createRankingCSV(dpcRanking, dpcPath,40)
+    dtcRanking, dtcPath = runFOEIR(originalRanking, dataSetName, 'FOEIR-DTC', 40)
+    evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
+    createRankingCSV(dtcRanking, dtcPath,40)
+    dicRanking, dicPath = runFOEIR(originalRanking, dataSetName, 'FOEIR-DIC', 40)
+    createRankingCSV(dicRanking, dicPath,40)
+    evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
     
     #run evaluations for FAIR
     #run FAIR algorithm 

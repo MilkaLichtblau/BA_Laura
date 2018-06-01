@@ -8,6 +8,8 @@ Created on Fri May 11 16:24:33 2018
 from __future__ import division
 import csv
 import numpy as np
+
+# Code refers to https://github.com/DataResponsibly/FairRank/blob/master
 # a python script define utility function i.e. format source data for computation
 # test of this script can be found in testUtility.py
 
