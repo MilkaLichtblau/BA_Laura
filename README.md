@@ -25,9 +25,9 @@ To be implemented
 
 FA\*IR * Meike Zehlike, Francesco Bonchi, Carlos Castillo, Sara Hajian, Mohamed Megahed and Ricardo Baeza-Yates. FA\*IR: A Fair Top-k Ranking Algorithm. CIKM 2017. *(Please use branch FA-IR_CIKM_17 for reproducing experiments of this paper)*
 
-Learning Fair Ranking (LFRanking) * Ke Yang and Julia Stoyanovich. Measuring Fairness in Rankend Outputs. CoRR 2017. *
+Learning Fair Ranking (LFRanking) * Ke Yang and Julia Stoyanovich. Measuring Fairness in Rankend Outputs. CoRR 2017. 
 
-Fairness of Exposure in Rankings (FOEIR) * Ashudeep Singh and Thorsten Joachims. Fairness of Exposure in Rankings. CoRR 2018. *
+Fairness of Exposure in Rankings (FOEIR) * Ashudeep Singh and Thorsten Joachims. Fairness of Exposure in Rankings. CoRR 2018. 
 
 
 ## Baseline Algorithms:
@@ -39,25 +39,30 @@ ListNet
 ### Score-ordering:
 
 Color-blind
+
 Feldman et al.
 
 ## Measures:
 
 ### Utility: 
 
-Mean Average Precision (MAP) !Referenz to be included!
-Normalized Discounted Cumulative Gain (NDCG) !Referenz to be included!
+Mean Average Precision (MAP) * Liu, Tie-Yan and Xu, Jun and Qin, Tao and Xiong, Wenying and Li, Hang. Letor: Benchmark dataset for research on learning to rank for information retrieval. SIGIR 2007. 
+
+Normalized Discounted Cumulative Gain (NDCG) * J\"{a}rvelin, Kalervo and Kek\"{a}l\"{a}inen, Jaana. Cumulated Gain-based Evaluation of IR Techniques. ACM Trans. Inf. Syst. 2002 
 
 ### Fairness:
 
-Normalized discounted KL-divergence (rKL) !Referenz to be included!
-Disparate Impact Ratio (DIR) !Referenz to be included!
-Disparate Treatment Ratio (DTR) !Referenz to be included!
+Normalized discounted KL-divergence (rKL) * Ke Yang and Julia Stoyanovich. Measuring Fairness in Rankend Outputs. CoRR 2017. 
+
+Disparate Impact Ratio (DIR) * Ashudeep Singh and Thorsten Joachims. Fairness of Exposure in Rankings. CoRR 2018. 
+
+Disparate Treatment Ratio (DTR) * Ashudeep Singh and Thorsten Joachims. Fairness of Exposure in Rankings. CoRR 2018. 
+
 Fairness@k based upon * Meike Zehlike, Francesco Bonchi, Carlos Castillo, Sara Hajian, Mohamed Megahed and Ricardo Baeza-Yates. FA\*IR: A Fair Top-k Ranking Algorithm. CIKM 2017. *(Please use branch FA-IR_CIKM_17 for reproducing experiments of this paper)*
 
 ### Overall Evaluation:
 
-Normalized Winning Number 
+Normalized Winning Number * Niek Tax and Sander Bockting and Djoerd Hiemstra. A cross-benchmark comparison of 87 learning to rank methods. Information processing \& management 2015. 
 
 ## Set-up
 
