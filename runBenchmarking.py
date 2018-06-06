@@ -140,18 +140,21 @@ def scoreBasedEval(dataSetPath, k):
     #run for FOEIR-DPC
     dpcRanking, dpcPath, isDPC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', 40)
     if isDPC == True:
-        evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
+        dpcRanking = updateCurrentIndex(dpcRanking)
+        evalResults += (runMetrics(40, protected, nonProtected, dpcRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
         createRankingCSV(dpcRanking, dpcPath,40)
         
     dtcRanking, dtcPath, isDTC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DTC', 40)
     if isDTC == True:
-        evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
+        dtcRanking = updateCurrentIndex(dtcRanking)
+        evalResults += (runMetrics(40, protected, nonProtected, dtcRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
         createRankingCSV(dtcRanking, dtcPath,40)
         
     dicRanking, dicPath, isDIC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DIC', 40)
     if isDIC == True:
+        dicRanking = updateCurrentIndex(dicRanking)
         createRankingCSV(dicRanking, dicPath,40)
-        evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
+        evalResults += (runMetrics(40, protected, nonProtected, dicRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
             
     #run evaluations for FAIR
     #run FAIR algorithm 

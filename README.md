@@ -73,6 +73,7 @@ This program was developed and tested in [Python 3.5](https://www.python.org/dow
 * birkhoff 0.0.5 
 * CVXOPT 1.2.0
 * matplotlib 2.0.0
+* numba 0.38.0
 * numpy 1.12.0
 * pandas 0.19.2
 * pip 9.0.1

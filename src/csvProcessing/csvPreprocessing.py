@@ -59,8 +59,14 @@ class csvPreprocessing():
         #gain relevant columns, precisely, column with score and column with label
         helper = helper[:,[column,-1]]
         
-        #convert string values into float to sort ranking
-        ranking = np.array([(float(row[0]),float(row[1])) for row in helper])
+        
+        
+        if 'ProPublica' in rawFilepath:
+            #convert string values into float to sort ranking
+            ranking = np.array([(1-float(row[0]),float(row[1])) for row in helper]) 
+        else:
+            #convert string values into float to sort ranking
+            ranking = np.array([(float(row[0]),float(row[1])) for row in helper])
         
         #sort ranking descending
         ranking = ranking[(-ranking[:,0]).argsort()]
@@ -79,6 +85,6 @@ class csvPreprocessing():
 
 
 
-#nameOut = createScoreOrderedCSV("../dataSets/GermanCredit/GermanCredit_age25.csv", 2)
-
-#print(nameOut)
+    #nameOut = createScoreOrderedCSV("C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/scoredDataSets/COMPAS/ProPublicaRace.csv", 2)
+    
+    #print(nameOut)
