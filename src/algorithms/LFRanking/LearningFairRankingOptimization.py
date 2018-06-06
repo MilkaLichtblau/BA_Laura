@@ -11,6 +11,11 @@ from numba.decorators import jit
 from src.algorithms.LFRanking import scoreDiff # import for accuracy measures
 from src.algorithms.LFRanking import utility # import for calculation of weighted scores
 
+"""
+Code refers to https://github.com/DataResponsibly/FairRank/blob/master/optimization.py
+"""
+
+
 # a python script define optimization process
 # test of this script can be found in testOptimization.py
 # Part of optimization code refers from github https://github.com/zjelveh/learning-fair-representations/blob/master/lfr.py 

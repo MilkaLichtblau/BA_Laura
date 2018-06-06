@@ -10,80 +10,135 @@ import math
 from cvxopt import spmatrix, matrix, sparse, solvers
 from src.csvProcessing.csvPrinting import createPCSV
 from birkhoff import birkhoff_von_neumann_decomposition
-import os
-import csv
-#from createCandidate import createCandidate as cC
 
 
 def runFOEIR(ranking, dataSetName, algoName, k = 40):
     
     """
+    Start the calculation of the ranking for FOEIR under a given fairness constraint
+    either Disparate Impact (DI), Disparate Treatment (DT), or Demographic Parity (DP)
     
+    @param ranking: List of candidate objects ordered color-blindly
+    @param dataSetName: Name of the data set the candidates are from
+    @param algoName: Name of inputed algorithm
+    @param k: Length of the ranking to return, if longer than default, 
+    set to default because otherwise computation will run out of memory
+    
+    return the new ranking and the path where to print the ranking to
     """
     
+    #initialize as empty string
+    rankingResultsPath = ''
+    newRanking = ranking
+    
+    #set k to maximum default value
     if k > 40:
         k = 40
         print('Calculation of P for k larger than 40 will not yield any results but just crash the program. Therefore k will be set to 40.')
     
+    #check for which constraint to comput the ranking
     if algoName == 'FOEIR-DIC':
 
-        x = solveLPWithDIC(ranking, k)
+        x, isRanked = solveLPWithDIC(ranking, k, dataSetName, algoName)
     elif algoName == 'FOEIR-DPC':
         
-        x = solveLPWithDIC(ranking, k)
+        x, isRanked = solveLPWithDIC(ranking, k, dataSetName, algoName)
     elif algoName == 'FOEIR-DTC':
         
-        x = solveLPWithDIC(ranking, k)
+        x, isRanked = solveLPWithDIC(ranking, k, dataSetName, algoName)
         
-    x = np.reshape(x,(k,k))
-
-    x = np.asarray(x, dtype='float64')
-
-    createPCSV(x, dataSetName, algoName, k)
+    if isRanked == True:
+        
+        x = np.reshape(x,(k,k))
     
-    newRanking = createRanking(x, ranking, k)
+        x = np.asarray(x, dtype='float64')
+        
+        #crate csv file with doubly stochastic matrix inside
+        createPCSV(x, dataSetName, algoName, k)
+        
+        #creat the new ranking, if not possible, isRanked will be false and newRanking
+        #will be equal to ranking
+        newRanking, isRanked = createRanking(x, ranking, k, algoName, dataSetName)
+        
+        if isRanked == True:
+            rankingResultsPath = algoName + '/' + dataSetName + "ranking.csv"
     
-    rankingResultsPath = algoName + '/' + dataSetName + "ranking.csv"
-    
-    return newRanking, rankingResultsPath
+    return newRanking, rankingResultsPath, isRanked
     
     
-def createRanking(x, nRanking, k):
+def createRanking(x, nRanking, k, algoName, dataSetName):
     
-    # Create a doubly stochastic matrix.
-    #
-    # D = numpy.array(...)
+    """
+    Calculates the birkhoff-von-Neumann decomopsition using package available at
+    https://github.com/jfinkels/birkhoff
     
-    # The decomposition is given as a list of pairs in which the right element
-    # is a permutation matrix and the left element is the scalar coefficient
-    # applied to that permutation matrix in the convex combination
-    # representation of the doubly stochastic matrix.
+    @param x: doubly stochastic matrix 
+    @param nRanking: nRanking: List with candidate objects from the data set ordered color-blindly
+    @param k: length of the ranking
+    @param dataSetName: Name of the data set the candidates are from
+    @param algoName: Name of inputed algorithm
+    
+    return the a list with candidate objects ordered according to the new ranking
+    """
     
     #round x to 0 decimal points because otherwise implementation of birkhoff_von_neumann_decomposition will not work.    
     x = np.around(x, 0)
     
-    result = birkhoff_von_neumann_decomposition(x)
+    #initialize one dimensional array with ones for condition testing
+    h = np.ones((1,len(x)))
     
-    eta = 0
+    #test if x is still a doubly stochastic matrix even after rounding
+    a1 = np.sum(x, axis = 0) == h
+    a2 = np.sum(x, axis = 1) == h.T
     
-    for coefficient, permutation_matrix in result:
-        if eta < coefficient:
-            eta = coefficient
-            ranking = permutation_matrix
-            
-    positions = np.nonzero(ranking)[1]
+    #only compute brikhoff for doubly stochastic matrixes
+    if np.all(a1) and np.all(a2):
+    
+        #compute birkoff von neumann decomposition
+        result = birkhoff_von_neumann_decomposition(x)
+    
+        theta = 0
+        
+        #choose permuation matrix with highest probability
+        for coefficient, permutation_matrix in result:
+            if theta < coefficient:
+                theta = coefficient
+                ranking = permutation_matrix
+        
+        #get positions of each document        
+        positions = np.nonzero(ranking)[1]
+    
+        #convert numpy array to iterable list
+        positions = positions.tolist()
+    
+        #correct the index of the items in the ranking according to permutation matrix
+        for p, candidate in zip(positions,nRanking[:k]):
+            candidate.currentIndex = p+1
+        
+        #sort candidates according to new index
+        nRanking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
+        
+        return nRanking, True
 
-    positions = positions.tolist()
-    
-    for p, candidate in zip(positions,nRanking[:k]):
-        candidate.currentIndex = p+1
-    
-    #sort candidates according to new index
-    nRanking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
-    
-    return nRanking
+    #otherwise we cannot obtain a ranking, hence return the original list and false
+    else:
+        
+        print('Cannot create a ranking for ' + algoName + ' on data set ' + dataSetName)
+        
+        return nRanking, False
 
-def solveLPWithDIC(ranking, k):
+def solveLPWithDIC(ranking, k, dataSetName, algoName):
+    
+    """
+    Solve the linear program with DIC
+    
+    @param ranking: list of candidate objects in the ranking
+    @param k: length of the ranking
+    @param dataSetName: Name of the data set the candidates are from
+    @param algoName: Name of inputed algorithm
+    
+    return doubly stochastic matrix as numpy array
+    """
     
     print('Start building LP with DIC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
@@ -137,7 +192,17 @@ def solveLPWithDIC(ranking, k):
             
             unproCount += 1
             unproListX.append(i)
-            
+        
+    # check if there are protected items    
+    if proCount == 0:
+        
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no protected items in data set.')
+        return 0, False
+    # check if there are unprotected items
+    if unproCount == 0:
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        return 0, False
+    
     initf = np.zeros((k,1))
     
     initf[proListX] = 1/proCount
@@ -178,9 +243,20 @@ def solveLPWithDIC(ranking, k):
     
     print('Finished solving LP with DIC.')
     
-    return np.array(sol['x'], dtype=np.float)
+    return np.array(sol['x'], dtype=np.float), True
 
-def solveLPWithDPC(ranking, k):
+def solveLPWithDPC(ranking, k, dataSetName, algoName):
+    
+    """
+    Solve the linear program with DPC
+    
+    @param ranking: list of candidate objects in the ranking
+    @param k: length of the ranking
+    @param dataSetName: Name of the data set the candidates are from
+    @param algoName: Name of inputed algorithm
+    
+    return doubly stochastic matrix as numpy array
+    """
     
     print('Start building LP with DPC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
@@ -238,7 +314,17 @@ def solveLPWithDPC(ranking, k):
             unproCount += 1
             unproListX.append(i)
             unproU += ranking[i].originalQualification
-            
+      
+    # check if there are protected items    
+    if proCount == 0:
+        
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no protected items in data set.')
+        return 0, False
+    # check if there are unprotected items
+    if unproCount == 0:
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        return 0, False
+        
     proU = proU / proCount
     unproU = unproU / unproCount          
     
@@ -282,9 +368,20 @@ def solveLPWithDPC(ranking, k):
     
     print('Finished solving LP with DPC.')
     
-    return np.array(sol['x'])
+    return np.array(sol['x']), True
 
-def solveLPWithDTC(ranking, k):
+def solveLPWithDTC(ranking, k, dataSetName, algoName):
+    
+    """
+    Solve the linear program with DTC
+    
+    @param ranking: list of candidate objects in the ranking
+    @param k: length of the ranking
+    @param dataSetName: Name of the data set the candidates are from
+    @param algoName: Name of inputed algorithm
+    
+    return doubly stochastic matrix as numpy array
+    """
     
     print('Start building LP with DTC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
@@ -342,7 +439,17 @@ def solveLPWithDTC(ranking, k):
             unproCount += 1
             unproListX.append(i)
             unproU += ranking[i].originalQualification
-            
+     
+    # check if there are protected items    
+    if proCount == 0:
+        
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no protected items in data set.')
+        return 0, False
+    # check if there are unprotected items
+    if unproCount == 0:
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        return 0, False
+        
     proU = proU / proCount
     unproU = unproU / unproCount          
     
@@ -386,18 +493,4 @@ def solveLPWithDTC(ranking, k):
     
     print('Finished solving LP with DTC.')
     
-    return np.array(sol['x'])
-
-def readPFromFile(filepath, algoName):
-    
-    #try to open csv file and save content in numpy array, if not found raise error
-    try:
-        with open(filepath, newline='') as File:  
-            reader = csv.reader(File)
-            x = np.array([row for row in reader])
-    except FileNotFoundError:
-        raise FileNotFoundError("Could not find file with P for" + algoName + '.')
-        
-    x = x.flatten()
-    
-    return x
+    return np.array(sol['x']), True

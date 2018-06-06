@@ -13,6 +13,18 @@ import csv
 
 def calculatedTRandDIR(ranking, algoName, dataSetName, k = 40):
     
+    """
+    Calculates DTR and DIR
+    
+    @param ranking: list of candidates in the ranking
+    @param algoName: Algorithm that produced the ranking
+    @param dataSetName: Data set the ranking was produced for
+    @param k: lenght of the given ranking
+    
+    returns a list with the list results for DIR and DTR together with the name of the data set, 
+    the algorithm name and die name of the measure
+    """
+    
     results = []
     
     if k > 40:
@@ -45,6 +57,7 @@ def calculatedTRandDIR(ranking, algoName, dataSetName, k = 40):
     results.append([dataSetName, algoName, 'DTR', eval_DTR])
     results.append([dataSetName, algoName, 'DIR', eval_DIR])
     
+    #print the doubly stochastic matrix to ensure varifiability
     createPCSV(x, dataSetName, algoName, k)
     
     return results
@@ -92,14 +105,23 @@ def dTR(ranking, k, x):
     proExposure = np.sum((np.sum((x[proListX]*v),axis=1)),axis=0)
     unproExposure = np.sum((np.sum((x[unproListX]*v),axis=1)),axis=0)
 
+    #initialize penalties if one of the counters are zero
+    top = 0
+    bottom = 0.000000000001
+
     #normalize with counter
-    proU = proU / proCount
-    unproU = unproU / unproCount          
-    proExposure = proExposure / proCount
-    unproExposure = unproExposure / unproCount
+    if proCount != 0:
+        proU = proU / proCount         
+        proExposure = proExposure / proCount
+        top = (proExposure / proU)
+        
+    if unproCount != 0:   
+        unproU = unproU / unproCount 
+        unproExposure = unproExposure / unproCount
+        bottom = (unproExposure / unproU)
     
     #calculate DTR
-    dTR = (proExposure / proU) / (unproExposure / unproU)
+    dTR = top / bottom
     
     return dTR
 
@@ -152,19 +174,42 @@ def dIR(ranking, k, x):
     proCTR = np.sum((np.sum((x[proListX]*u[proListX]*v),axis=1)),axis=0)
     unproCTR = np.sum((np.sum((x[unproListX]*u[unproListX]*v),axis=1)),axis=0)
 
+    top = 0
+    bottom = 0.000000000001
+
     #normalize with counter
-    proU = proU / proCount
-    unproU = unproU / unproCount          
-    proCTR = proCTR / proCount
-    unproCTR = unproCTR / unproCount
+    if proCount != 0:
+        proU = proU / proCount
+        proCTR = proCTR / proCount
+        top = (proCTR / proU)
+    
+    if unproCount != 0:
+        
+        unproU = unproU / unproCount          
+        
+        unproCTR = unproCTR / unproCount
+        
+        bottom = (unproCTR / unproU)
+
     
     #calculate DIR
-    dIR = (proCTR / proU) / (unproCTR / unproU)
+    dIR = top / bottom
     
     return dIR
     
     
 def solveLPWithoutFairness(ranking,algoName, k):
+    
+    """
+    Compute a doubly stochastic matrix with all probabilities for a given document to be 
+    ranked at a given rank
+    
+    @param ranking: list of candidates in the ranking
+    @param algoName: Algorithm that produced the ranking
+    @param k: lenght of the given ranking
+    
+    return the doubly stochastic matrix
+    """
     
     print('Start building LP without Fairness Constraints for' +algoName)    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
@@ -230,6 +275,15 @@ def solveLPWithoutFairness(ranking,algoName, k):
     return np.array(sol['x'])
 
 def readPFromFile(filepath, algoName):
+    
+    """
+    Read earlier computed doubly stochastic matrix from file for FOEIR
+    
+    @param filepath: Path of the doubly stochastic matrix 
+    @param algoName: Name of the algorithm the doubly stochastiv matrix should be read for
+    
+    return the flattened doubly stochastic matrix
+    """
     
     #try to open csv file and save content in numpy array, if not found raise error
     try:

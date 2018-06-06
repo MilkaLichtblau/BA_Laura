@@ -31,19 +31,25 @@ def fairnessTestAtK(dataSetName, ranking, protected, unProtected, k):
     
     ranking = ranking[:k]
     
+    #initialize p and alpha values for given k
     pairsOfPAndAlpha = initPAndAlpha(k)
     
+    #calculates the percentage of protected items in the data set
     p = calculateP(protected,unProtected,dataSetName,k)
     
     pair = [item for item in pairsOfPAndAlpha if item[0] == p][0]
     
+    #initialize a FairnessInRankingsTester object
     gft = FairnessInRankingsTester(pair[0], pair[1], k, correctedAlpha=True)
     
+    #get the index until the ranking can be considered as fair, m will equal true if the whole set is true
     t, m = FairnessInRankingsTester.ranked_group_fairness_condition(gft, ranking)
     
     if m == False:
+        #calculate and normalize Fairness@k
         return t/len(ranking)
     else:
+        #return 1.0 if everything is fair
         return 1.0
     
     

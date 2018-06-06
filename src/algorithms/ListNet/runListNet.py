@@ -7,4 +7,4 @@ Created on Sun May 27 19:36:19 2018
 
 def runListNet(query):
     
-    
+        

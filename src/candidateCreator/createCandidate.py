@@ -11,6 +11,8 @@ from src.candidateCreator.candidate import Candidate
 
 Create objects of type candidate to use for the ranking algorithms
 
+part of code refers to https://github.com/MilkaLichtblau/FA-IR_Ranking
+
 """
 
 class createCandidate():
@@ -106,13 +108,4 @@ class createCandidate():
         ranking.sort(key=lambda candidate: candidate.qualification, reverse=True)
     
         return protected, nonProtected, ranking
-    
-    """
-    pro, non, rank = create("../preprocessedDataSets/GermanCredit_age25pre.csv")
-    
-    for i in range(len(rank)):
-        print(rank[i].qualification)
-        print(rank[i].isProtected)
-        print(rank[i].currentIndex)
-    """
     

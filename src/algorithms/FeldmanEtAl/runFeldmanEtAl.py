@@ -41,8 +41,8 @@ Code taken from https://github.com/MilkaLichtblau/FA-IR_Ranking/blob/master/src/
 def feldmanRanking(protectedCandidates, nonProtectedCandidates, k, dataSetName):
 
     # ensure candidates are sorted by descending qualificiations
-    protectedCandidates.sort(key=lambda candidate: candidate.qualification, reverse=True)
-    nonProtectedCandidates.sort(key=lambda candidate: candidate.qualification, reverse=True)
+    protectedCandidates.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
+    nonProtectedCandidates.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
 
     protectedQualifications = [protectedCandidates[i].originalQualification for i in range(len(protectedCandidates))]
     nonProtectedQualifications = [nonProtectedCandidates[i].originalQualification for i in range(len(nonProtectedCandidates))]

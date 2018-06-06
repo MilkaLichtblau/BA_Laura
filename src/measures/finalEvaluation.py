@@ -11,7 +11,7 @@ from collections import Counter
 #constants for algorithms
 ALGO_COLORBLIND = 'Color-Blind'
 ALGO_FAIR = 'FAIR'
-ALGO_LFRANING = 'LFRanking'
+ALGO_LFRANKING = 'LFRanking'
 ALGO_FELDMAN = 'FeldmanEtAl'
 ALGO_FOEIRDPC = 'FOEIR-DPC'
 ALGO_FOEIRDTC = 'FOEIR-DTC'
@@ -46,7 +46,7 @@ def calculateFinalEvaluation(results, fileNames):
         ['NWN', algorithmName, measureName, valueOfNWNforMeasureAndAlgo]
     """
     
-    algoList = [ALGO_COLORBLIND,ALGO_FAIR,ALGO_LFRANING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC]
+    algoList = [ALGO_COLORBLIND,ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC]
     
     dataSets = []
     querySets = []
@@ -81,7 +81,7 @@ def calculateFinalEvaluation(results, fileNames):
     dataSets = set(dataSets)
     dataSets = list(dataSets)
     
-    
+    #average evaluations over queries for a data set
     for name in dataSets:
         helpResults = []
         for row in results:

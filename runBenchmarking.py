@@ -13,9 +13,11 @@ from src.algorithms.LFRanking.runLFRanking import runLFRanking
 from src.algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
 from src.algorithms.FOEIR.runFOEIR import runFOEIR
 from src.measures.runMetrics import runMetrics
-import csv
+from src.visualizer.visualizeData import plotNWN
 import src.measures.finalEvaluation as finalEval
 import os
+import pandas as pd
+import numpy as np
 
 """
 
@@ -72,22 +74,31 @@ def main():
                 filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
                 results += (scoreBasedEval(filePathCredit25, 100))
     """
+    
     for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
         for name in files:
             if 'csv' in name:
                 fileNames.append(name)
-                filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
-                results += (scoreBasedEval(filePathCredit25, 100))
-                
+                filePath = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
+                results += (scoreBasedEval(filePath, 100))
+        
+    for dirpath, dirnames, files in os.walk("scoredDataSets/COMPAS/"):
+        for name in files:
+            if 'csv' in name:
+                fileNames.append(name)
+                filePath = cP.createScoreOrderedCSV("scoredDataSets/COMPAS/" + name, 2)
+                results += (scoreBasedEval(filePath, 100))        
     
-    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)      
+    
+    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)  
 
-    print (finalResults)          
+    #print (finalResults)          
     
-    with open('results/evaluationResults.csv','w',newline='') as mf:
-             writer = csv.writer(mf)
-             writer.writerows(finalResults) 
+    df = pd.DataFrame(np.array(finalResults).reshape(len(finalResults),4), columns = ['Data_Set_Name', 'Algorithm_Name', 'Measure', 'Value'])
     
+    df.to_csv('results/evaluationResults.csv', index=(False))
+    
+    plotNWN()
     
 def scoreBasedEval(dataSetPath, k):
     
@@ -124,18 +135,24 @@ def scoreBasedEval(dataSetPath, k):
     #evaluate FAIR with all available measures
     evalResults += (runMetrics(k, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
     
+    
     #run evaluations for FOEIR with different Fairness Constraints
     #run for FOEIR-DPC
-    dpcRanking, dpcPath = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', 40)
-    evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
-    createRankingCSV(dpcRanking, dpcPath,40)
-    dtcRanking, dtcPath = runFOEIR(originalRanking, dataSetName, 'FOEIR-DTC', 40)
-    evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
-    createRankingCSV(dtcRanking, dtcPath,40)
-    dicRanking, dicPath = runFOEIR(originalRanking, dataSetName, 'FOEIR-DIC', 40)
-    createRankingCSV(dicRanking, dicPath,40)
-    evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
-    
+    dpcRanking, dpcPath, isDPC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', 40)
+    if isDPC == True:
+        evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
+        createRankingCSV(dpcRanking, dpcPath,40)
+        
+    dtcRanking, dtcPath, isDTC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DTC', 40)
+    if isDTC == True:
+        evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
+        createRankingCSV(dtcRanking, dtcPath,40)
+        
+    dicRanking, dicPath, isDIC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DIC', 40)
+    if isDIC == True:
+        createRankingCSV(dicRanking, dicPath,40)
+        evalResults += (runMetrics(40, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
+            
     #run evaluations for FAIR
     #run FAIR algorithm 
     FAIRRanking, notSelected, pathFAIR = runFAIR(dataSetName, protected, nonProtected, k)
