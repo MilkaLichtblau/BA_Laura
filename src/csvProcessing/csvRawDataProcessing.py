@@ -9,22 +9,51 @@ import csv
 import numpy as np
 
 """
+
+***IMPORTANT INFORMATION***
+
 Creates multiple CSV files each one storing a query from a raw CSV with 
 multiple queries inside. 
 
 We assume the same length for all queries
+
+Additionally, we create 5 fold cross-validation sets so folder structure for that needs to be
+present beforehand:
+        ../../learningDataSet/nameOfDataSet/
+        All
+        /fold01
+            /train
+            /test
+            /validate
+        /fold02
+            /train
+            /test
+            /validate
+        /fold03
+            /train
+            /test
+            /validate
+        /fold04
+            /train
+            /test
+            /validate
+        /fold05
+            /train
+            /test
+            /validate
+            
+Also note that we choose folds at random rates but do not delete files before creation in folders.
+Hence, if creation failed during the process or the process is executed twice, a user might have to
+manually check if folds for cross-validation were created correctly. 
 """
-
-
-class dataSetFormatForLearning:
     
 
-    def createQueriesCSV(rawFilepath, outPath, queryLength, queryColumn, judgeColumn, sensiColumn, *scoreColumns):
+def createQueriesCSV(rawFilepath, outPath, queryLength, queryColumn, judgeColumn, sensiColumn, *scoreColumns):
             """
             
             @param rawFilepath:    Path of the raw input data csv file with multiple queries inside
             @param outPath:        outputpath of the folder where datasets are stored should be: 
-                "../learningDataSets/nameOfDataSet/"
+                "../../learningDataSets/nameOfDataSet/"
             @param queryLength:    The length of the given query, used to calculate normalized scores from 
             ranked positions in the judgeColumn
             @param queryColumn:    Column with query identifier inside
@@ -38,6 +67,8 @@ class dataSetFormatForLearning:
             no return but creates a CSV files with name dataSet_queryNumber as follows:
                 
                 |Score 1|Score 2|...|Score N|Relevance rating as score|Group membership|
+                
+            and devides queries in five fold cross validation each fold having a train (80%), validation(10%) and test (10%) set
                 
             """
             
@@ -99,8 +130,11 @@ class dataSetFormatForLearning:
             columns += scoreColumns
             columns += [judgeColumn, sensiColumn]
             
+            #get total number of queries for cross validation
+            numQ = len(queries)
+            
             #Create csv files for each query with above mentioned specifics
-            for i in queries:
+            for count, i in enumerate(queries):
                 output = []
                 for row in dataSetWithoutHeader:
                     if i == row[queryColumn]:
@@ -109,7 +143,10 @@ class dataSetFormatForLearning:
                         output.append([row[index] for index in columns])
                 
                 #needs to be adjusted for other data sets
-                outFilePath = outPath + outFile[0] +'_'+ i + '.csv'
+                fileName = outFile[0] +'_'+ i + '.csv'
+                
+                constructCrossValidation(count, numQ, outPath, output, fileName)
+                outFilePath = outPath+'All/' + fileName
                 #write scores and labels to a csv file
                 try:
                     with open(outFilePath, 'w', newline='') as csvOut:
@@ -117,8 +154,138 @@ class dataSetFormatForLearning:
                         writer.writerows(output)
                 except Exception:
                     raise Exception("Some error occured during file creation. Double check specifics")
-                    
+                  
+def constructCrossValidation(count, numQ, outFilePath, output, fileName):
+    
+        count += 1
+        
+        val = count/numQ
+        
+        if val <= 0.60:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold01/train/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.60 and val <= 0.80:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold01/validate/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.80:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold01/test/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        
+        if val <= 0.40 or val > 0.80:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold02/train/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.40 and val <= 0.60:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold02/validate/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.60 and val <= 0.80:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold02/test/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+                
+        if val <= 0.20 or val > 0.60 :
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold03/train/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.20 and val <= 0.40:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold03/validate/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.40 and val <= 0.60:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold03/test/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+                
+        if val > 0.40:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold04/train/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val <= 0.20:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold04/validate/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.20 and val <= 0.40:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold04/test/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+              
+        if val > 0.20 and val <= 0.80:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold05/train/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val > 0.80:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold05/validate/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
+        elif val <= 0.20:
+            #write scores and labels to a csv file
+            try:
+                with open(outFilePath+'fold05/test/'+fileName, 'w', newline='') as csvOut:
+                    writer = csv.writer(csvOut)
+                    writer.writerows(output)
+            except Exception:
+                raise Exception("Some error occured during file creation. Double check specifics")
     
     # Call Method change variables according to data set only change folder name for output folder
     # Output folder needs to exist, otherwise an Exception will occur
-    createQueriesCSV("../rawDataSets/W3C/W3C.csv","../learningDatasets/W3C/",1092, 0, 7, 1, 2,3,4,5,6)
+createQueriesCSV("../../rawDataSets/TREC/TREC.csv","../../learningDatasets/TREC/",1092, 0, 7, 1, 2,3,4,5,6)

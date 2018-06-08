@@ -23,21 +23,32 @@ DTR = 'DTR'
 RKL = 'rKL'
 
 def plotData():
+    
+    """
+    Plots the data 
+    
+    Saves a pdf file for each data set with plots for measures NDCG@1, NDCG@5, NDCG@10, MAP, and Fairness@k.
+    Since those all have their best value at 1, they can be easily compared
+    Additionally, for DIR, DTR, and rKL we save a pdf file for their performance on every data set.
+    DIR and DTR show the diviations from 1., rKL has its best value at 0.
+    Lastly, we print a pdf with NWN, the overall performance of the different Algorithms across all data set.
+    """
 
     algoList = [COLORBLIND, ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC]
     
-    #x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
-    x = pd.read_csv('results/evaluationResults.csv')
+    x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
+    #x = pd.read_csv('results/evaluationResults.csv')
     
     dataSets = x['Data_Set_Name']
 
     dataSets = dataSets.drop_duplicates()
     
     extraMeasures = [DIR, DTR, RKL]
-    
+    #plots the extra Plots for DIR, DTR, and RKL
     for i in extraMeasures:
         plotExtra(x, algoList, i)
-    
+        
+    #plots a plot for each data set and NWN
     for index, value in dataSets.iteritems():
         
         f = x[(x.Data_Set_Name == value)]
@@ -74,38 +85,51 @@ def plotData():
     
         fig = ax.get_figure()
         fig.tight_layout()
-        #fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
-        fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
+        fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
+        #fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
     
 def plotExtra(x, algoList, measure):
     
+    """
+    Plots extra plots for DIR, DTR and rKL
+    
+    @param x: dataFrame with evaluation results
+    @param algoList: List with all algorithms
+    @param measure: List with extra measures DIR, DTR and rKL
+    
+    plot plots for DTR, DIR and rKL 
+    """    
     rKL = x[(x.Measure == measure)]
     rKL = rKL[(rKL.Data_Set_Name != 'NWN')]
     
     rKL1 = rKL[(rKL.Algorithm_Name == algoList[0])]
     rKL1 = rKL1.rename(columns={'Value': algoList[0]})
-    
+
+    rKL1 = rKL1.set_index('Data_Set_Name')
+
     for algo in algoList[1:]:
         h1 = rKL[(rKL.Algorithm_Name == algo)]
         h1 = h1.rename(columns={'Value': algo})
-        h1 = h1[[algo]]
-        rKL1.reset_index(drop=True, inplace=True)
-        h1.reset_index(drop=True, inplace=True)
-        rKL1 = pd.concat([rKL1,h1], axis=1)
-        
-
-    n = rKL1.plot.bar(x=['Data_Set_Name'], y=algoList)
+        h1 = h1[['Data_Set_Name',algo]]
+        rKL1 = rKL1.join(h1.set_index('Data_Set_Name'))
+    
     
     if measure == DIR or measure == DTR:
-        plt.axhline(1, color='k')
+        rKL1 = pd.concat([rKL1[algoList] - 1],axis=1)
+        
+    
+    n = rKL1.plot.bar(y=algoList)
+    
+    if measure == DIR or measure == DTR:
+        plt.axhline(0, color='k',linewidth=0.1)
         
     plt.title(measure)
     n.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                ncol=2, mode="expand", borderaxespad=0.)
     fig_rKL = n.get_figure()
     fig_rKL.tight_layout()
-    #fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'.pdf',bbox_inches='tight')
-    fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
+    fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'.pdf',bbox_inches='tight')
+    #fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
 
 
-#plotData()
+plotData()

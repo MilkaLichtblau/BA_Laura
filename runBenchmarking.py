@@ -66,22 +66,24 @@ def main():
                     filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + files, 2)
                     results += (scoreBasedEval(filePathCredit25, 100))
     """
-    """
-    for dirpath, dirnames, files in os.walk("learningDataSets//"):
+    #read all Queries in TREC
+    for dirpath, dirnames, files in os.walk("learningDataSets/TREC/"):
         for name in files:
             if 'csv' in name:
+                #append file names for final evaluation
                 fileNames.append(name)
-                filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
-                results += (scoreBasedEval(filePathCredit25, 100))
-    """
+                queryPath = 
+                learnRankings(filePathCredit25)
     
+    #read all data sets in German Credit
     for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
         for name in files:
             if 'csv' in name:
                 fileNames.append(name)
                 filePath = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + name, 2)
                 results += (scoreBasedEval(filePath, 100))
-        
+    
+    #read all data sets in COMPAS
     for dirpath, dirnames, files in os.walk("scoredDataSets/COMPAS/"):
         for name in files:
             if 'csv' in name:
@@ -99,6 +101,10 @@ def main():
     df.to_csv('results/evaluationResults.csv', index=(False))
     
     plotNWN()
+    
+    
+def learnRankings()
+    
     
 def scoreBasedEval(dataSetPath, k):
     
