@@ -17,6 +17,7 @@ ALGO_FELDMAN = 'FeldmanEtAl'
 ALGO_FOEIRDPC = 'FOEIR-DPC'
 ALGO_FOEIRDTC = 'FOEIR-DTC'
 ALGO_FOEIRDIC = 'FOEIR-DIC'
+ALGO_LISTNET = 'ListNet'
 
 DIR = 'DIR'
 DTR = 'DTR'
@@ -34,10 +35,10 @@ def plotData():
     Lastly, we print a pdf with NWN, the overall performance of the different Algorithms across all data set.
     """
 
-    algoList = [COLORBLIND, ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC]
+    algoList = [COLORBLIND, ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC, ALGO_LISTNET]
     
-    x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
-    #x = pd.read_csv('results/evaluationResults.csv')
+    #x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
+    x = pd.read_csv('results/evaluationResults.csv')
     
     dataSets = x['Data_Set_Name']
 
@@ -128,8 +129,6 @@ def plotExtra(x, algoList, measure):
                ncol=2, mode="expand", borderaxespad=0.)
     fig_rKL = n.get_figure()
     fig_rKL.tight_layout()
-    fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'.pdf',bbox_inches='tight')
-    #fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
+    #fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'.pdf',bbox_inches='tight')
+    fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
 
-
-plotData()

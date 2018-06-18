@@ -81,7 +81,7 @@ def fairRanking(k, protectedCandidates, nonProtectedCandidates, minProp, alpha):
 
         else:
             # find the best candidate available
-            if protectedCandidates[idxProtected].qualification >= nonProtectedCandidates[idxNonProtected].qualification:
+            if protectedCandidates[idxProtected].learnedScores >= nonProtectedCandidates[idxNonProtected].learnedScores:
                 # the best is a protected one
                 result.append(protectedCandidates[idxProtected])
                 idxProtected += 1
@@ -96,6 +96,6 @@ def fairRanking(k, protectedCandidates, nonProtectedCandidates, minProp, alpha):
 
 def __mergeTwoRankings(ranking1, ranking2):
     result = ranking1 + ranking2
-    result.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
+    result.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
     return result
 

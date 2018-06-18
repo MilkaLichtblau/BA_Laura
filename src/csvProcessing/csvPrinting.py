@@ -18,16 +18,15 @@ def createRankingCSV(rankedCandidates, rankingResultsPath, k):
     no return
     """
     
-    ranking = []
+    ranking = [['Original_Score','Ranking_Score','Sensitive_Attribute']]
         
     for i in range(k):
     
-        uid = str(rankedCandidates[i].uuid)
         originQ = str(rankedCandidates[i].originalQualification)
         quali = str(rankedCandidates[i].qualification)
         proAttr = str(rankedCandidates[i].isProtected)
             
-        ranking.append([uid, originQ, quali, proAttr])
+        ranking.append([originQ, quali, proAttr])
             
     try:     
         with open('rankings/' + rankingResultsPath,'w',newline='') as mf:

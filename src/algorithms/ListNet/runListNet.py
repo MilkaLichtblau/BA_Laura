@@ -5,22 +5,37 @@ Created on Sun May 27 19:36:19 2018
 @author: Laura
 """
 
-import numpy as np
-import chainer
-from chainer.backends import cuda
-from chainer import Function, gradient_check, report, training, utils, Variable
-from chainer import datasets, iterators, optimizers, serializers
-from chainer import Link, Chain, ChainList
-import chainer.functions as F
-import chainer.links as L
-from chainer.training import extensions
+from src.algorithms.ListNet.listnet import ListNet
+
+def runListNet(ranking, train, validate, test, k = 100, verb = 10, maxIter = 100, val = 0.5):
 
 
-x_data = np.array([5], dtype=np.float32)
-x = Variable(x_data)
+    train_val_filename = train
+    test_score_filename = validate
+    test_noscore_filename = test
+    verbose = verb
+    max_iter = maxIter
+    val_ratio = val
+    rank = k
 
-z = 2*x
-y = x**2 - z + 1
-y.backward(retain_grad=True)
+    agent = ListNet(verbose = verbose, max_iter = max_iter, val_ratio = val_ratio, n_thres_cand = rank)
+    agent.fit(train_val_filename = train_val_filename)
+    if test_score_filename:
+        agent.test(ranking, filename = test_score_filename, noscore = False)
+    if test_noscore_filename:
+        ranking = agent.test(ranking, filename = test_noscore_filename, noscore = True)
+        
+    dataSetName = test.split('/')[-3]
+    
+    return ranking, dataSetName
+   
+        
+        
+        
+        
+                
+     
 
-print(z.grad)
+
+
+            

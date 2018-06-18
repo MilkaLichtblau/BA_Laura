@@ -12,12 +12,14 @@ from src.algorithms.fair_ranker.runRankFAIR import runFAIR
 from src.algorithms.LFRanking.runLFRanking import runLFRanking
 from src.algorithms.FeldmanEtAl.runFeldmanEtAl import feldmanRanking
 from src.algorithms.FOEIR.runFOEIR import runFOEIR
+from src.algorithms.ListNet.runListNet import runListNet
 from src.measures.runMetrics import runMetrics
-from src.visualizer.visualizeData import plotNWN
+from src.visualizer.visualizeData import plotData
 import src.measures.finalEvaluation as finalEval
 import os
 import pandas as pd
 import numpy as np
+import csv
 
 """
 
@@ -50,30 +52,25 @@ def main():
     results = []
     finalResults = []
     fileNames = []
-    
-    """
-    paths = []
 
-    for dirpath, dirnames, files in os.walk('scoredDataSets/'):
-        if dirnames != []:
-            paths += dirnames
-            print(paths)
-
-    for folder in paths:
-        for dirpath, dirname, files in os.walk('scoredDataSets/' + folder + '/'):
-            print(files)
-                if folder == 'GermanCredit':
-                    filePathCredit25 = cP.createScoreOrderedCSV("scoredDataSets/GermanCredit/" + files, 2)
-                    results += (scoreBasedEval(filePathCredit25, 100))
-    """
-    #read all Queries in TREC
+    #read all data sets in TREC including all folds
     for dirpath, dirnames, files in os.walk("learningDataSets/TREC/"):
-        for name in files:
-            if 'csv' in name:
-                #append file names for final evaluation
-                fileNames.append(name)
-                queryPath = 
-                learnRankings(filePathCredit25)
+        
+        if 'fold' in dirpath:
+            
+            #construct extractions for different folds
+            getTrain = dirpath+'/train.csv'
+            getValidation = dirpath+'/validation.csv'
+            getTest = dirpath+'/test.csv'
+            #constructs a candidate list for the test data set
+            ranking, queryNumbers = cC.createLearningCandidate(getTest)
+            
+            #run ListNet learning process
+            listNetRanking, dataSetName  = runListNet(ranking, getTrain, getValidation, getTest)
+            #evaluate listNet learning process, print ranked queries and start scoreBasedEval
+            listResults, listFileNames = evaluateLearning(listNetRanking, dataSetName, queryNumbers, True)
+            results += listResults
+            fileNames += listFileNames
     
     #read all data sets in German Credit
     for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
@@ -92,41 +89,124 @@ def main():
                 results += (scoreBasedEval(filePath, 100))        
     
     
-    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)  
-
-    #print (finalResults)          
+    finalResults = finalEval.calculateFinalEvaluation(results, fileNames)          
     
     df = pd.DataFrame(np.array(finalResults).reshape(len(finalResults),4), columns = ['Data_Set_Name', 'Algorithm_Name', 'Measure', 'Value'])
     
     df.to_csv('results/evaluationResults.csv', index=(False))
     
-    plotNWN()
+    plotData()
+   
     
+def evaluateLearning(ranking, dataSetName, queryNumbers, listNet = False, k = 100):
+    """
+    Evaluates the learning algorithms per query, creates an output file for each ranked query,
+    and start the scoreBasedEval method for each query
     
-def learnRankings()
+    @param ranking: A list of candidates from different queries with new calculated scores for them
+    @param dataSetName: Name of the data set without query numbers
+    @param queryNumbers: List of query identifiers
+    @param k: turncation point of the ranking
     
+    return evalResults list with the evaluation results for the algorithms
+           evalResults looks like this: [dataSetName, Optimization Algorithm, Measure, Value of Measure]
+           fileNames list with file names for each query.
+    """
+    #initialize list for evaluation results
+    evalResults = []
+    fileNames = []
     
-def scoreBasedEval(dataSetPath, k):
+    output = [['Original_Score','Ranking_Score','Sensitive_Attribute']]
+        
+    #loop for each query
+    for query in queryNumbers:
+    
+        queryRanking = []
+        queryProtected = []
+        queryNonprotected = []
+        #loop over the candidate list to construct the output
+        for i in range(len(ranking)):
+            
+            #check if the query numbers are equal
+            if ranking[i].query == query:
+                
+                originQ = str(ranking[i].originalQualification)
+                quali = str(ranking[i].qualification)
+                proAttr = str(ranking[i].isProtected)
+                
+                output.append([originQ, quali, proAttr])         
+        
+                #construct list with candiates for one query
+                queryRanking.append(ranking[i])
+                    
+                if proAttr == 'True':
+                    queryProtected.append(ranking[i])
+                else:
+                    queryNonprotected.append(ranking[i])
+            
+        finalName = dataSetName +'_'+str(query)
+        
+        fileNames.append(finalName)
+        
+        # sort candidates by credit scores 
+        queryProtected.sort(key=lambda candidate: candidate.qualification, reverse=True)
+        queryNonprotected.sort(key=lambda candidate: candidate.qualification, reverse=True)
+            
+        #sorting the ranking in accordance with is new scores
+        queryRanking.sort(key=lambda candidate: candidate.qualification, reverse=True)
+        queryRanking = updateCurrentIndex(queryRanking)
+        evalResults += (runMetrics(k, queryProtected, queryNonprotected, ranking, queryRanking, dataSetName, 'ListNet'))
+            
+        #only start scoreBasedEval if the algorithm is listNet (baseline)
+        if listNet == True:
+            #run the score based evaluation on the ranked candidate list
+            scoreBasedEval(finalName, k, queryProtected, queryNonprotected, queryRanking, listNet)
+            
+        try:     
+            with open('rankings/ListNet/' + finalName +'.csv','w',newline='') as mf:
+                writer = csv.writer(mf)
+                writer.writerows(output) 
+        except Exception:
+            raise Exception("Some error occured during file creation. Double check specifics.")
+    
+    return evalResults, fileNames
+    
+def scoreBasedEval(dataSetPath, k = 100, protected = [], nonProtected = [], originalRanking = [], listNet = False):
     
     """
-    Starts the optimization and evaluation of the post-processing methods
+    Evaluates the learning to rank algorithms and runs 
+    the optimization and evaluation of the post-processing methods
     
     @param dataSetPath: Path of the data sets storing scores in the first column and
-    membership of the sensitive group in the second column
+    membership of the sensitive group in the second column. If the inputed data comes from a
+    learning to rank algorithm, this param only holds the name of the data set together with
+    the query identifier separated by '_'
     @param k: Provides the length of the ranking
+    @param protected: If data comes from a learning to rank algorithm this param holds a 
+    list of candidates with protected group membership
+    @param protected: If data comes from a learning to rank algorithm this param holds a 
+    list of candidates with non-protected group membership
+    @param protected: If data comes from a learning to rank algorithm this param holds a 
+    list of candidates from the new ranking
+    @param scoreData: Is set false if the data does not come from an already scored data 
+    set but from a learning to rank algorithm
     
     returns a list of evaluation results of the form:
         [dataSetName, Optimization Algorithm, Measure, Value of Measure]
     """
     
-    #initialize list for evaluation results
     evalResults = []
     
-    #creates Candidates from the preprocessed CSV files in folder preprocessedDataSets
-    protected, nonProtected, originalRanking = cC.createScoreBased(dataSetPath)
+    #check if the given data comes from the base line algorithm ListNet
+    #if it does not, construct candidates from the data
+    if listNet == False:
+        #creates Candidates from the preprocessed CSV files in folder preprocessedDataSets
+        protected, nonProtected, originalRanking = cC.createScoreBased(dataSetPath)
     
-    #extract Data set name from path
-    dataSetName = extractDataSetName(dataSetPath)
+        #extract Data set name from path
+        dataSetName = extractDataSetName(dataSetPath)
+    else:
+        dataSetName = dataSetPath
     
     #creates a csv with candidates ranked with color-blind ranking
     createRankingCSV(originalRanking, 'Color-Blind/' + dataSetName + 'ranking.csv',k )
@@ -172,15 +252,16 @@ def scoreBasedEval(dataSetPath, k):
     #evaluate FAIR with all available measures
     evalResults += (runMetrics(k, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
         
-    #run evaluations for LFRanking
-    #run LFRanking algorithm
-    LFRanking, pathLFRanking = runLFRanking(originalRanking, protected, nonProtected, 4, dataSetName) 
-    #create CSV file with ranking outputs
-    createRankingCSV(LFRanking, pathLFRanking,k)
-    #Update the currentIndex of a candidate according to LFRanking
-    LFRanking = updateCurrentIndex(LFRanking)
-    #evaluate LFRanking with all available measures
-    evalResults += (runMetrics(k, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
+    if originalRanking[0].features:
+        #run evaluations for LFRanking
+        #run LFRanking algorithm
+        LFRanking, pathLFRanking = runLFRanking(originalRanking, protected, nonProtected, 4, dataSetName) 
+        #create CSV file with ranking outputs
+        createRankingCSV(LFRanking, pathLFRanking,k)
+        #Update the currentIndex of a candidate according to LFRanking
+        LFRanking = updateCurrentIndex(LFRanking)
+        #evaluate LFRanking with all available measures
+        evalResults += (runMetrics(k, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
     
     return evalResults
     

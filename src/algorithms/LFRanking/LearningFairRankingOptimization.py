@@ -82,7 +82,7 @@ def M_k(_M_nk, _N, _k):
         M_k[j] /= _N
     return M_k
 
-@jit    
+#@jit    
 def x_n_hat(_X, _M_nk, _clusters, _N, _P, _k): 
     """
         Calculate the estimated X through clusters Z.
@@ -240,6 +240,7 @@ def initOptimization(_data,_k):
         :param _k: The number of clusters in the intermediate layer of neural network
         :return: returns the parameter vector and bound of optimization.
     """
+
     user_N,att_N=_data.shape
 
     # error handling for input type    

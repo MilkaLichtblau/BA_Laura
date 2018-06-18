@@ -150,7 +150,7 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     unproListX =[]
     
     for candidate in ranking[:k]:
-        u.append(candidate.originalQualification)
+        u.append(candidate.learnedScores)
         v.append(1 / math.log((1 + candidate.originalIndex),2))
     
     arrayU = np.asarray(u)
@@ -270,7 +270,7 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     unproListX =[]
     
     for candidate in ranking[:k]:
-        u.append(candidate.originalQualification)
+        u.append(candidate.learnedScores)
         v.append(1 / math.log((1 + candidate.originalIndex),2))
     
     arrayU = np.asarray(u)
@@ -307,13 +307,13 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
             
             proCount += 1
             proListX.append(i)
-            proU += ranking[i].originalQualification
+            proU += ranking[i].learnedScores
             
         else:
             
             unproCount += 1
             unproListX.append(i)
-            unproU += ranking[i].originalQualification
+            unproU += ranking[i].learnedScores
       
     # check if there are protected items    
     if proCount == 0:
@@ -395,7 +395,7 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     unproListX =[]
     
     for candidate in ranking[:k]:
-        u.append(candidate.originalQualification)
+        u.append(candidate.learnedScores)
         v.append(1 / math.log((1 + candidate.originalIndex),2))
     
     arrayU = np.asarray(u)
@@ -432,13 +432,13 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
             
             proCount += 1
             proListX.append(i)
-            proU += ranking[i].originalQualification
+            proU += ranking[i].learnedScores
             
         else:
             
             unproCount += 1
             unproListX.append(i)
-            unproU += ranking[i].originalQualification
+            unproU += ranking[i].learnedScores
      
     # check if there are protected items    
     if proCount == 0:

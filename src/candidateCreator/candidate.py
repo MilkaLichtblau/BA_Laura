@@ -19,26 +19,30 @@ class Candidate(object):
     """
 
 
-    def __init__(self, qualification, originalQualification, protectedAttributes, index, weights):
+    def __init__(self, qualification, originalQualification, protectedAttributes, index, query, features):
         """
         @param qualification : describes how qualified the candidate is to match the search query
         @param protectedAttributes: list of strings that represent the protected attributes this
                                     candidate has (e.g. gender, race, etc)
                                     if the list is empty/null this is a candidate from a non-protected group
         @param index: integer values with the index of a candidate in a ranking
-        @param weights: weights from a learning to rank algorithm for a given candidate
+        @param query: query number for more than one data set
+        @param features: numpy array with feature vector for a candidate inside
         """
         self.__qualification = qualification
         self.__protectedAttributes = protectedAttributes
         # keeps the candidate's initial qualification for evaluation purposes
         self.__originalQualification = originalQualification
+        self.__learnedScores = originalQualification
         self.uuid = uuid.uuid4()
         # index after optimization with fair ranking
         self.__currentIndex = index
         # index from color blind algorithm
         self.__originalIndex = index
-        # weights from a learning to rank algorithm
-        self.__weights = weights
+        # query number for more than one data set
+        self.__query = query
+        # numpy array with features inside
+        self.__features = features
 
 
     @property
@@ -86,12 +90,28 @@ class Candidate(object):
         self.__originalIndex = value
     
     @property
-    def weights(self):
-        return self.__weights
+    def query(self):
+        return self.__query
     
-    @weights.setter
-    def weights(self, value):
-        self.__weights = value
+    @query.setter
+    def query(self, value):
+        self.__query = value
+        
+    @property
+    def features(self):
+        return self.__features
+    
+    @features.setter
+    def features(self, value):
+        self.__features = value
+        
+    @property
+    def learnedScores(self):
+        return self.__learnedScores
+    
+    @learnedScores.setter
+    def learnedScores(self, value):
+        self.__learnedScores = value
 
 
 

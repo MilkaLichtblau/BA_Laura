@@ -33,20 +33,22 @@ def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
     dat = []
     pro_dat = []
     unpro_dat = []
+    scores = []
     
     for i in range(len(ranking)):
-        dat.append([ranking[i].originalQualification])
+        dat.append(ranking[i].features)
+        scores.append(ranking[i].learnedScores)
     
     for i in range(len(protected)):
-        pro_dat.append([protected[i].originalQualification])
+        pro_dat.append(protected[i].features)
         
     for i in range(len(unprotected)):
-        unpro_dat.append([unprotected[i].originalQualification])
+        unpro_dat.append(unprotected[i].features)
     
-    data = np.array(dat)
-    input_scores=data[:,0]
-    pro_data = np.array(pro_dat)
-    unpro_data = np.array(unpro_dat)
+    data = np.asarray(dat)
+    input_scores= np.asarray(scores)
+    pro_data = np.asarray(pro_dat)
+    unpro_data = np.asarray(unpro_dat)
     
     print("start LFRanking opt")
 
@@ -56,7 +58,7 @@ def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
     LearningFairRankingOptimization.lbfgsOptimize.iters=0                
     rez = optim.fmin_l_bfgs_b(LearningFairRankingOptimization.lbfgsOptimize, x0=rez, disp=1, epsilon=1e-5, 
                    args=(data, pro_data, unpro_data, input_scores, _k, 0.01,
-                         1, 100, 0), bounds = bnd,approx_grad=True, factr=1e12, pgtol=1e-04,maxfun=15000, maxiter=15000)
+                         1, 100, 0), bounds = bnd,approx_grad=True, factr=1e12, pgtol=1e-04,maxfun=50, maxiter=50)
 
 
     print ("Ending LFRanking optimization")
@@ -99,8 +101,7 @@ def calculateFinalEstimateY(_M_nk_x, _inputscores, _clusters, _N, _k, ranking):
             score_hat_u += (_M_nk_x[ui,ki] * _clusters[ki])                         
         score_hat[ui] = utility.calculateWeightedScores(score_hat_u)
     
-    score_hat=list(score_hat)    
-    _inputscores=list(_inputscores)
+    score_hat=list(score_hat)
     
     # sort the scores in descending order
     for i in range(len(ranking)):
