@@ -86,8 +86,8 @@ def plotData():
     
         fig = ax.get_figure()
         fig.tight_layout()
-        fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
-        #fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
+        #fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
+        fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
     
 def plotExtra(x, algoList, measure):
     

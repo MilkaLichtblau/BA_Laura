@@ -24,7 +24,7 @@ def normalizeQualifications(ranking):
     qualifications = [ranking[i].qualification for i in range(len(ranking))]
     highest = max(qualifications)
     for candidate in ranking:
-        candidate.originalQualification = candidate.originalQualification / highest
+        candidate.learnedScore = candidate.learnedScore / highest
         candidate.qualification = candidate.qualification / highest
 
 

@@ -39,7 +39,7 @@ def distances(_X, _clusters, _N, _P, _k):
                 dists[i, j] += (_X[i, p] - _clusters[j, p]) * (_X[i, p] - _clusters[j, p]) 
     return dists
 
-@jit
+#@jit
 def M_nk(_dists, _N, _k): 
     """
         Calculate the probability of input X maps to clusters Z.
@@ -82,7 +82,7 @@ def M_k(_M_nk, _N, _k):
         M_k[j] /= _N
     return M_k
 
-#@jit    
+@jit    
 def x_n_hat(_X, _M_nk, _clusters, _N, _P, _k): 
     """
         Calculate the estimated X through clusters Z.

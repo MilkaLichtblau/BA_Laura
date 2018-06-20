@@ -86,10 +86,13 @@ def calculateFinalEvaluation(results, fileNames):
     for name in dataSets:
         helpResults = []
         for row in results:
+            #if name is equal to row just append row for NWN evaluation
             if name == row[0]:
                 midResults.append(row)
+            #elif name is only in row append row for averaging over queries
             elif name in row[0]:
                 helpResults.append(row[1:])
+        #check if the current data set is a query set
         if dataSetDic[name] != 1:
             hNDCG1,hNDCG5,hNDCG10, hRKL, hDTR, hDIR, hMAP, hAP, hFaK = getListForMeasureInDataSet(helpResults, algoList)
             lNDCG1 += hNDCG1
@@ -101,8 +104,7 @@ def calculateFinalEvaluation(results, fileNames):
             lAP += hAP
             lFaK += hFaK
             midResults += calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, hFaK, dataSetDic, name, algoList)
-        
-                
+            
     
     lNDCG1 = []
     lNDCG5 = []
@@ -172,14 +174,13 @@ def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, lFaK, dataSet
     actualAlgoList = []
     results = []
     
-    #check whih algorithms were evaluated on this data set
+    #check which algorithms were evaluated on this data set
     for algo in algoList:
         for row in lNDCG1:
             if algo == row[0]:
                 #append actually included algorithms for this data set
                 actualAlgoList.append(algo)
                 
-    
     #make actualAlgoList a list of unique items
     actualAlgoList = set(actualAlgoList)
     actualAlgoList = list(actualAlgoList)
@@ -211,6 +212,7 @@ def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, lFaK, dataSet
                 resAP += aP[2]
             if algo == aP[0]:
                 resFaK += faK[2]
+        #make sure data set is not 0 to prevent division by 0
         if dataSetDic[dataSetName] != 0:
             results.append([dataSetName, algo, M_NDCG1, resNDCG1/dataSetDic[dataSetName]])
             results.append([dataSetName, algo, M_NDCG5, resNDCG5/dataSetDic[dataSetName]])
@@ -272,7 +274,7 @@ def calculateNWN(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lMAP, lFaK, algoList):
             if algo == mAP[0]:
                 resFaK += faK[2]
         #make sure IWN is not 0
-        print(idealWinningNumber)
+
         if idealWinningNumber != 0:
             resultsNWN.append(['NWN', algo, M_NDCG1, resNDCG1/idealWinningNumber])
             resultsNWN.append(['NWN', algo, M_NDCG5, resNDCG5/idealWinningNumber])
@@ -289,7 +291,7 @@ def calculateNWN(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lMAP, lFaK, algoList):
 def getListForMeasureInDataSet(resultsForWN, algoList):
     
     """
-    Get result lists for each measure in a data set
+    Gets result lists for each measure in a data set
     
     @param resultsForWN: list with results from the evaluation measures on one
     data set

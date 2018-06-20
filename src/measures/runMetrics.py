@@ -9,6 +9,7 @@ import src.measures.calculaterKL as rKL
 import src.measures.relevance as rel
 import src.measures.calculateDTRandDIR as d
 import src.measures.calculateFairnessTestAtK as ftak
+import copy
 
 """
 This method runs the evaluation process.
@@ -45,27 +46,24 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     indexRanking = []
     #initialize empty list for positive ranking indices
     proIndex = []
-    #initialize empty list for original ranking scores with the lenght of the
-    #data set
-    originalScores = []
-    #initialize empyt list for original scores in ranking
-    originalScoresRanking = []
     
-    #make sure originalRanking is still ordered color-blindly
-    originalRanking.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
+    #deep copy since we need to sort this list differently from the other ranking list
+    oR = copy.deepcopy(originalRanking)
     
-    for j in range(len(originalRanking)):
-        originalScores.append(originalRanking[j].originalQualification)
+    #make sure ranking is sorted according to its qualifications
+    ranking.sort(key=lambda candidate: candidate.qualification, reverse=True)
+    
+    #make sure originalRanking is still ordered descendingly on original qualifications
+    oR.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
     
     #fill indexRanking and proIndex with values
     for i in range(len(ranking)):
         indexRanking.append(ranking[i].currentIndex)
-        originalScoresRanking.append(ranking[i].originalQualification)
         if ranking[i].isProtected  == True:
             proIndex.append(ranking[i].originalIndex)
     
     #initialize length of originalRanking
-    user_N = len(originalRanking)
+    user_N = len(oR)
     #initialize length of protected group
     pro_N = len(protected)
     #initialize result list
@@ -77,17 +75,17 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     results.append([dataSetName, algoName, 'AP', eval_AP])
     
     #calculate NDCG@1
-    eval_NDCG = rel.nDCG(1, ranking, originalRanking)
+    eval_NDCG = rel.nDCG(1, ranking, oR)
     #append results
     results.append([dataSetName, algoName, 'NDCG@1', eval_NDCG])
     
     #calculate NDCG@5
-    eval_NDCG = rel.nDCG(5, ranking, originalRanking)
+    eval_NDCG = rel.nDCG(5, ranking, oR)
     #append results
     results.append([dataSetName, algoName, 'NDCG@5', eval_NDCG])
     
     #calculate NDCG@10
-    eval_NDCG = rel.nDCG(10, ranking, originalRanking)
+    eval_NDCG = rel.nDCG(10, ranking, oR)
     #append results
     results.append([dataSetName, algoName, 'NDCG@10', eval_NDCG])
     

@@ -71,13 +71,21 @@ Normalized Winning Number * Niek Tax and Sander Bockting and Djoerd Hiemstra. A 
 This program was developed and tested in [Python 3.5](https://www.python.org/downloads/release/python-350/). It needs the following packages:
 
 * birkhoff 0.0.5 
+* chainer 1.16.0
 * CVXOPT 1.2.0
 * matplotlib 2.0.0
 * numba 0.38.0
 * numpy 1.12.0
 * pandas 0.19.2
 * pip 9.0.1
+* Python 3.5 or higher
 * scipy 0.18.1
+
+### Environment
+
+For evaluation, we ran the program on a Ubuntu system with 8 kernels and 20 GB ram. We cannot guarantee that a system with less ram will be able to cope with the computational intensive evaluations when set to default values, i.e. k = 100. 
+
+However, while developing the benchmarking suit, we used a machine running Windows 10 with 2 kernels and only 4 GB ram. To enable running the benchmark on such a machine set k = 40. Note that it is only possible to set k = 40, 100, 1000, or 1500 due to the alpha_c values available for evaluation of Fairness@k.
 
 ## Installation and Starting the Benchmarking Process
 

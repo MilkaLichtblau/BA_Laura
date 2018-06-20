@@ -40,14 +40,12 @@ Code taken from https://github.com/MilkaLichtblau/FA-IR_Ranking/blob/master/src/
 
 def feldmanRanking(protectedCandidates, nonProtectedCandidates, k, dataSetName):
     
-    print(protectedCandidates[0].learnedScores)
-    
     # ensure candidates are sorted by descending qualificiations
-    protectedCandidates.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
     nonProtectedCandidates.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
-
-    protectedQualifications = [protectedCandidates[i].learnedScores for i in range(len(protectedCandidates))]
     nonProtectedQualifications = [nonProtectedCandidates[i].learnedScores for i in range(len(nonProtectedCandidates))]
+    
+    protectedCandidates.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
+    protectedQualifications = [protectedCandidates[i].learnedScores for i in range(len(protectedCandidates))]
 
     ranking = []
     
@@ -58,7 +56,7 @@ def feldmanRanking(protectedCandidates, nonProtectedCandidates, k, dataSetName):
             # the rest will not be considered anyway
             break
         # find percentile of protected candidate
-        p = percentileofscore(protectedQualifications, candidate.qualification)
+        p = percentileofscore(protectedQualifications, candidate.learnedScores)
         # find score of a non-protected in the same percentile
         score = scoreatpercentile(nonProtectedQualifications, p)
         candidate.qualification = score

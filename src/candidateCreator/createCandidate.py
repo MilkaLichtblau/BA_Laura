@@ -79,11 +79,10 @@ class createCandidate():
     def createScoreBased(filename):
         """
         
-        @param filename: Path of input file. Assuming preprocessed CSV file with no header
-                  and two columns. The first column containing the ranking scores
-                  the second column containing the group membership encoded in 0 for 
-                  membership of the nonprotected group and in 1 for membership of the
-                  protected group
+        @param filename: Path of input file. Assuming CSV with sensitive 
+        attribute in last column and score second last column. If param features
+        is true, we further assume that features are in the remaining first columns
+        @param 
         
         return    A list with protected candidates, a list with nonProtected candidates 
                   and a list with the whole colorblind ranking.
@@ -97,14 +96,15 @@ class createCandidate():
         
         try:
             with open(filename) as csvfile:
-                data = pd.read_csv(csvfile, header=None)
+                data = pd.read_csv(csvfile)
                 for row in data.itertuples():
                     i += 1
+                    features = np.asarray(row[:(-2)])
                     # access second row of .csv with protected attribute 0 = nonprotected group and 1 = protected group
-                    if row[2] == 0:
-                        nonProtected.append(Candidate(row[1], row[1], [], i, [], []))
+                    if row[-1] == 0:
+                        nonProtected.append(Candidate(row[-2], row[-2], [], i, [], features))
                     else:
-                        protected.append(Candidate(row[1], row[1], "protectedGroup", i, [], []))
+                        protected.append(Candidate(row[-2], row[-2], "protectedGroup", i, [], features))
         except FileNotFoundError:
             raise FileNotFoundError("File could not be found. Something must have gone wrong during preprocessing.")                
     
