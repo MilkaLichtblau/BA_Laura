@@ -3,6 +3,34 @@
 Created on Sat Jun  2 12:01:59 2018
 
 @author: Laura
+
+
+
+Code mainly refers to https://github.com/jfinkels/birkhoff/blob/master/birkhoff.py
+some modifications were applied to account for not perfect doubly stochastic matrices
+
+
+
+# birkhoff.py - decompose a doubly stochastic matrix into permutation matrices
+#
+# Copyright 2015 Jeffrey Finkelstein.
+#
+# This file is part of Birkhoff.
+#
+# Birkhoff is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Birkhoff is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# Birkhoff.  If not, see <http://www.gnu.org/licenses/>.
+Provides a function for computing the Birkhoff--von Neumann decomposition of
+a doubly stochastic matrix into a convex combination of permutation matrices.
 """
 
 # Imports from built-in libraries.
@@ -13,6 +41,7 @@ import itertools
 from networkx import from_numpy_matrix
 from networkx.algorithms.bipartite.matching import maximum_matching
 import numpy as np
+import operator
 
 #: The current version of this package.
 __version__ = '0.0.5'
@@ -37,13 +66,11 @@ def to_permutation_matrix(matches):
     
     n = len(matches)
     P = np.zeros((n, n))
-    print(n)
-    print(P)
     
     # This is a cleverer way of doing
     #
-    #     for (u, v) in matches.items():
-    #         P[u, v] = 1
+    #for (u, v) in matches.items():
+    #    P[u, v] = 1
     #
     P[list(zip(*(matches.items())))] = 1
     return P
@@ -166,7 +193,9 @@ def birkhoff_von_neumann_decomposition(D):
     (so in particular they are not sorted in any way).
 
     """
+
     m, n = D.shape
+    len_original_Matrix = m + n
     if m != n:
         raise ValueError('Input matrix must be square ({} x {})'.format(m, n))
     indices = list(itertools.product(range(m), range(n)))
@@ -177,7 +206,20 @@ def birkhoff_von_neumann_decomposition(D):
     # entries of the matrix to floating point numbers, regardless of
     # whether they were integers.
     S = D.astype('float')
-    while not np.all(S == 0):
+    theta = 0
+    end = 0
+    begin = np.count_nonzero(S)
+    # only keep computing decomposition while theta smaller than 0.95 
+    # and the nonzero entries in S are getting viewer.
+    # This is needed to account for cases where the algorithm does not converge due to 
+    # the inputed matrix not being hundert percent douply stochastic but only 
+    # approximately. Hence, if one iteration does not bring more zero entries
+    # in S we can conclude that the next iteration also will not do so.
+    # Furthermore, for our algorithm we only need the decomposition matrix
+    # with the highes probability, consequently, if theta is equal to 0.95
+    # the one with the highest probability was most likely already computed.
+    while theta <= 0.95 and not begin == end:
+        begin = np.count_nonzero(S)
         # Create an undirected graph whose adjacency matrix contains a 1
         # exactly where the matrix S has a nonzero entry.
         W = to_pattern_matrix(S)
@@ -197,8 +239,31 @@ def birkhoff_von_neumann_decomposition(D):
         # {n, ..., 2n - 1}; see `to_bipartite_matrix()`.
         left_nodes = range(n)
         M = maximum_matching(G, left_nodes)
-        print(M)
-        print(len(M))
+        
+        # account the case when the maximum_matching does not return a matching
+        # for each inputed value. Sort the missing matchings together.
+        if len(M) < len_original_Matrix:
+            M = dict(sorted(M.items(), key=operator.itemgetter(0)))
+            inv_M = {v: k for k, v in M.items()}
+            sorted_inv_M = dict(sorted(inv_M.items(), key=operator.itemgetter(0)))
+            name_iter = 0
+            value_iter = 0
+            missing_name = []
+            missing_value = []
+            for name, value in zip(M, sorted_inv_M):
+                if name_iter != name:
+                    missing_name.append(name_iter)
+                    name_iter += 1
+                name_iter += 1
+                    
+                if value_iter != value:
+                    missing_value.append(value_iter)
+                    value_iter += 1
+                value_iter += 1
+            for name, value in zip (missing_name, missing_value[::-1]):
+                M[name] = value
+            M = dict(sorted(M.items(), key=operator.itemgetter(0)))
+        
         # However, since we have both a left vertex set and a right vertex set,
         # each representing the original vertex set of the pattern graph
         # (``W``), we need to convert any vertex greater than ``n`` to its
@@ -222,6 +287,12 @@ def birkhoff_von_neumann_decomposition(D):
         S -= q * P
         # PRECISION ISSUE: There seems to be a problem with floating point
         # precision here, so we need to round down to 0 any entry that is very
-        # small.
+        # small.        
         S[np.abs(S) < TOLERANCE] = 0.0
+        
+        # add the coefficient value to theta
+        theta += q
+        # get non-zero entries for S
+        end = np.count_nonzero(S)
+        
     return list(zip(coefficients, permutations))

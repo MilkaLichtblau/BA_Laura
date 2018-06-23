@@ -55,6 +55,7 @@ def calculateFinalEvaluation(results, fileNames):
     resultsForWN = []
     midResults = []
     finalResults = []
+    queryAlgoList = []
     
     lNDCG1 = []
     lNDCG5 = []
@@ -65,7 +66,9 @@ def calculateFinalEvaluation(results, fileNames):
     lMAP = []
     lAP = []
     lFaK = []
+
     
+    #extract data set names
     for name in fileNames:
         if '_' not in name:
             name = name.split('.')
@@ -75,12 +78,15 @@ def calculateFinalEvaluation(results, fileNames):
             querySets.append(name[0])
             name = name[0].split('_')
             dataSets.append(name[0])
-            
+    
+    #get the number of data sets for nwn     
     dataSetDic = Counter(dataSets)
     
     #getting unique elements
     dataSets = set(dataSets)
     dataSets = list(dataSets)
+    
+    
     
     #average evaluations over queries for a data set
     for name in dataSets:
@@ -92,8 +98,11 @@ def calculateFinalEvaluation(results, fileNames):
             #elif name is only in row append row for averaging over queries
             elif name in row[0]:
                 helpResults.append(row[1:])
+                queryAlgoList.append(row[1])
         #check if the current data set is a query set
         if dataSetDic[name] != 1:
+            #get the number of occurences of the algorithm in the subset
+            queryAlgoDic = Counter(queryAlgoList)
             hNDCG1,hNDCG5,hNDCG10, hRKL, hDTR, hDIR, hMAP, hAP, hFaK = getListForMeasureInDataSet(helpResults, algoList)
             lNDCG1 += hNDCG1
             lNDCG5 += hNDCG5
@@ -103,7 +112,7 @@ def calculateFinalEvaluation(results, fileNames):
             lDIR += hDIR
             lAP += hAP
             lFaK += hFaK
-            midResults += calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, hFaK, dataSetDic, name, algoList)
+            midResults += calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, hFaK, name, algoList, queryAlgoDic)
             
     
     lNDCG1 = []
@@ -150,9 +159,10 @@ def calculateFinalEvaluation(results, fileNames):
     finalResults += calculateNWN(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lMAP, lFaK, algoList)
     
     return finalResults
-    
-    
-def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, lFaK, dataSetDic, dataSetName, algoList):
+            
+        
+
+def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, lFaK, dataSetName, algoList, queryAlgoDic):
     
     """
     Calculates the average values over a set of queries for each measure and algorithm
@@ -163,10 +173,11 @@ def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, lFaK, dataSet
     @param lDIR: list with values for all algorithms over issued queries for DIR
     @param lMAP: list with values for all algorithms over issued queries for AP
     @param lFaK: list with values for all algorithms over issued queries for FairnessAtK
-    @param dataSetDic: A dictionary with the data set name and the total number
-    queries for that data set
     @param dataSetName: Name of data set
     @param algoList: List with all algorithms in the benchmarking
+    @param queryAlgoDic: A dictionary with the algorithm name and the total occurences in
+    the subset of the results. This is necessary since some evaluations might not be possible
+    on every query in a data set and using this we can find out how many queries were evaluated
     
     return result list with average values for each measure and each algorithm
     """
@@ -212,16 +223,19 @@ def calculateAverage(lNDCG1,lNDCG5,lNDCG10, lRKL, lDTR, lDIR, lAP, lFaK, dataSet
                 resAP += aP[2]
             if algo == aP[0]:
                 resFaK += faK[2]
-        #make sure data set is not 0 to prevent division by 0
-        if dataSetDic[dataSetName] != 0:
-            results.append([dataSetName, algo, M_NDCG1, resNDCG1/dataSetDic[dataSetName]])
-            results.append([dataSetName, algo, M_NDCG5, resNDCG5/dataSetDic[dataSetName]])
-            results.append([dataSetName, algo, M_NDCG10, resNDCG10/dataSetDic[dataSetName]])
-            results.append([dataSetName, algo, M_MAP, resAP/dataSetDic[dataSetName]])
-            results.append([dataSetName, algo, M_RKL, resRKL/dataSetDic[dataSetName]]) 
-            results.append([dataSetName, algo, M_DTR, resDTR/dataSetDic[dataSetName]]) 
-            results.append([dataSetName, algo, M_DIR, resDIR/dataSetDic[dataSetName]]) 
-            results.append([dataSetName, algo, M_FAK, resFaK/dataSetDic[dataSetName]]) 
+        #make sure count for data set is not 0 to prevent division by 0
+        #results need to be averaged with the number of queries in the data set
+        #since we count the occurence of each algorithm in the results we need to 
+        #devide by the number of measures present in the evaluation
+        if queryAlgoDic[algo] != 0:
+            results.append([dataSetName, algo, M_NDCG1, resNDCG1/(queryAlgoDic[algo]/9)])
+            results.append([dataSetName, algo, M_NDCG5, resNDCG5/(queryAlgoDic[algo]/9)])
+            results.append([dataSetName, algo, M_NDCG10, resNDCG10/(queryAlgoDic[algo]/9)])
+            results.append([dataSetName, algo, M_MAP, resAP/(queryAlgoDic[algo]/9)])
+            results.append([dataSetName, algo, M_RKL, resRKL/(queryAlgoDic[algo]/9)]) 
+            results.append([dataSetName, algo, M_DTR, resDTR/(queryAlgoDic[algo]/9)]) 
+            results.append([dataSetName, algo, M_DIR, resDIR/(queryAlgoDic[algo]/9)]) 
+            results.append([dataSetName, algo, M_FAK, resFaK/(queryAlgoDic[algo]/9)]) 
         
         
     return results

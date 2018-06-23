@@ -58,7 +58,7 @@ def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
     LearningFairRankingOptimization.lbfgsOptimize.iters=0                
     rez = optim.fmin_l_bfgs_b(LearningFairRankingOptimization.lbfgsOptimize, x0=rez, disp=1, epsilon=1e-5, 
                    args=(data, pro_data, unpro_data, input_scores, _k, 0.01,
-                         1, 100, 0), bounds = bnd,approx_grad=True, factr=1e12, pgtol=1e-04,maxfun=50, maxiter=50)
+                         1, 100, 0), bounds = bnd,approx_grad=True, factr=1e12, pgtol=1e-04,maxfun=15000, maxiter=15000)
 
 
     print ("Ending LFRanking optimization")

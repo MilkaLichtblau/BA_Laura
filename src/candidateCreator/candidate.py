@@ -39,6 +39,9 @@ class Candidate(object):
         self.__currentIndex = index
         # index from color blind algorithm
         self.__originalIndex = index
+        # index from a learning to rank algorithm if data stems from 
+        # score based ranking learnedIndex is the same as originalIndex
+        self.__learnedIndex = index        
         # query number for more than one data set
         self.__query = query
         # numpy array with features inside
@@ -112,6 +115,14 @@ class Candidate(object):
     @learnedScores.setter
     def learnedScores(self, value):
         self.__learnedScores = value
+        
+    @property
+    def learnedIndex(self):
+        return self.__learnedIndex
+    
+    @learnedIndex.setter
+    def learnedIndex(self, value):
+        self.__learnedIndex = value
 
 
 

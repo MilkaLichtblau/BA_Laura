@@ -7,7 +7,7 @@ Created on Sun May 27 19:36:19 2018
 
 from src.algorithms.ListNet.listnet import ListNet
 
-def runListNet(ranking, train, validate, test, k = 100, verb = 10, maxIter = 100, val = 0.5):
+def runListNet(ranking, train, validate, test, k = 100, verb = 100, maxIter = 1000, val = 0.5):
 
 
     train_val_filename = train

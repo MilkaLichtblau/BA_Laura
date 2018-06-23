@@ -64,7 +64,7 @@ def M_nk(_dists, _N, _k):
             else:
                 M_nk[i, j] = exp[i, j] / 1e-6
     return M_nk
-@jit    
+#@jit    
 def M_k(_M_nk, _N, _k): 
     # print(_M_nk, _N, _k)
     """
@@ -82,7 +82,7 @@ def M_k(_M_nk, _N, _k):
         M_k[j] /= _N
     return M_k
 
-@jit    
+#@jit    
 def x_n_hat(_X, _M_nk, _clusters, _N, _P, _k): 
     """
         Calculate the estimated X through clusters Z.

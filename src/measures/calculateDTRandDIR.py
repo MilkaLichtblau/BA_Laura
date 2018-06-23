@@ -6,7 +6,6 @@ Created on Wed May 23 14:16:56 2018
 """
 
 import numpy as np 
-import math
 from cvxopt import spmatrix, matrix, sparse, solvers
 from src.csvProcessing.csvPrinting import createPCSV
 import csv
@@ -27,9 +26,9 @@ def calculatedTRandDIR(ranking, algoName, dataSetName, k = 40):
     
     results = []
     
-    if k > 40:
-        k = 40
-        print('Calculation of P for k larger than 40 will not yield any results but just crash the program. Therefore k will be set to 40.')
+    if k > 100:
+        k = 100
+        print('Calculation of P for k larger than 100 will not yield any results but just crash the program. Therefore k will be set to 40.')
     
     if algoName == 'FOEIR-DIC':
         
@@ -80,36 +79,44 @@ def dTR(ranking, k, x):
     unproCount = 0
     proListX = []
     unproListX = []
+    utility = []
     
-    #calculate utility and exposure for protected and unprotected groups
+    #calculate utility and click through rate (CTR) for protected and unprotected groups
     for i in range(k):
-        
+        #get relevances from ranking
+        utility.append(ranking[i].originalQualification)       
+    
+    u = np.asarray(utility)
+    #normalize input
+    u = (u - np.min(u))/np.max(u)-np.min(u)
+    
+    # get normalized values for protected and non-protected group as well as other data needed
+    for i in range(k):  
         if ranking[i].isProtected == True:
-            
+            #add relevances for positive group
+            proU += u[i]
+            #get number of protected elements in ranking
             proCount += 1
-            proU += ranking[i].originalQualification
+            #get index of protected elements in ranking
             proListX.append(i)
-            
         else:
-            
+            #do the same as above for unprotected
+            unproU += u[i]
             unproCount += 1
-            unproU += ranking[i].originalQualification
             unproListX.append(i)
 
     v = np.arange(1,(k+1),1)
-    
     v = 1/np.log2(1 + v + 1)
-    
     v = np.reshape(v, (1,k))
     
     proExposure = np.sum((np.sum((x[proListX]*v),axis=1)),axis=0)
     unproExposure = np.sum((np.sum((x[unproListX]*v),axis=1)),axis=0)
 
-    #initialize penalties if one of the counters are zero
+    #initialize penalties if one of the counters is zero
     top = 0
     bottom = 0.000000000001
 
-    #normalize with counter
+    #calculate value for each group
     if proCount != 0:
         proU = proU / proCount         
         proExposure = proExposure / proCount
@@ -149,35 +156,44 @@ def dIR(ranking, k, x):
     #calculate utility and click through rate (CTR) for protected and unprotected groups
     for i in range(k):
         #get relevances from ranking
-        utility.append(ranking[i].originalQualification)
-        
+        utility.append(ranking[i].originalQualification)       
+    
+    u = np.asarray(utility)
+    
+    #normalize input
+    u = (u - np.min(u))/(np.max(u)-np.min(u))
+    
+    # get normalized values for protected and non-protected group as well as other data needed
+    for i in range(k):  
         if ranking[i].isProtected == True:
             #add relevances for positive group
-            proU += ranking[i].originalQualification
+            proU += u[i]
             #get number of protected elements in ranking
             proCount += 1
             #get index of protected elements in ranking
             proListX.append(i)
         else:
             #do the same as above for unprotected
-            unproU += ranking[i].originalQualification
+            unproU += u[i]
             unproCount += 1
             unproListX.append(i)
-
+    
+    # initialize v with DCG
     v = np.arange(1,(k+1),1)
-    
     v = 1/np.log2(1 + v + 1)
+    v = np.reshape(v, (1,k))
     
-    u = np.asarray(utility)
     u = np.reshape(u, (k,1))
     
+    # calculate CTR for each group
     proCTR = np.sum((np.sum((x[proListX]*u[proListX]*v),axis=1)),axis=0)
     unproCTR = np.sum((np.sum((x[unproListX]*u[unproListX]*v),axis=1)),axis=0)
-
+    
+    #initialize penalties if one of the counters is zero
     top = 0
     bottom = 0.000000000001
 
-    #normalize with counter
+    #calculate value for each group
     if proCount != 0:
         proU = proU / proCount
         proCTR = proCTR / proCount
@@ -217,15 +233,21 @@ def solveLPWithoutFairness(ranking,algoName, k):
     u = []
     for candidate in ranking[:k]:
         u.append(candidate.originalQualification)
-        v.append(1 / math.log((1 + candidate.originalIndex),2))
     
     arrayU = np.asarray(u)
-    arrayV = np.asarray(v)
+    
+    # initialize v with DCG
+    v = np.arange(1,(k+1),1)
+    v = 1/np.log2(1 + v + 1)
+    v = np.reshape(v, (1,k))
+    
+    #normalize input
+    arrayU = (arrayU - np.min(arrayU))/(np.max(arrayU)-np.min(arrayU))
     
     arrayU = np.reshape(arrayU, (k,1))
-    arrayV = np.reshape(arrayV, (1,k))
     
-    uv = arrayU.dot(arrayV)
+    
+    uv = arrayU.dot(v)
     uv = uv.flatten()
     
     #negate objective function to convert maximization problem to minimization problem

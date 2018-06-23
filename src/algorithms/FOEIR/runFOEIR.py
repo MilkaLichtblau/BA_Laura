@@ -6,11 +6,9 @@ Created on Fri May 25 18:46:35 2018
 """
 
 import numpy as np 
-import math
 from cvxopt import spmatrix, matrix, sparse, solvers
 from src.csvProcessing.csvPrinting import createPCSV
-from birkhoff import birkhoff_von_neumann_decomposition
-
+from src.algorithms.FOEIR.Birkhoff import birkhoff_von_neumann_decomposition
 
 def runFOEIR(ranking, dataSetName, algoName, k = 40):
     
@@ -32,9 +30,9 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     newRanking = ranking
     
     #set k to maximum default value
-    if k > 40:
-        k = 40
-        print('Calculation of P for k larger than 40 will not yield any results but just crash the program. Therefore k will be set to 40.')
+    if k > 100:
+        k = 100
+        print('Calculation of P for k larger than 100 will not yield any results but just crash the program. Therefore k will be set to 40.')
     
     #check for which constraint to comput the ranking
     if algoName == 'FOEIR-DIC':
@@ -60,8 +58,7 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
         #will be equal to ranking
         newRanking, isRanked = createRanking(x, ranking, k, algoName, dataSetName)
         
-        if isRanked == True:
-            rankingResultsPath = algoName + '/' + dataSetName + "ranking.csv"
+        rankingResultsPath = algoName + '/' + dataSetName + "ranking.csv"
     
     return newRanking, rankingResultsPath, isRanked
     
@@ -81,51 +78,33 @@ def createRanking(x, nRanking, k, algoName, dataSetName):
     return the a list with candidate objects ordered according to the new ranking
     """
     
-    #round x to 0 decimal points because otherwise implementation of birkhoff_von_neumann_decomposition will not work.    
-    x = np.around(x, 0)
+    #compute birkoff von neumann decomposition
+    result = birkhoff_von_neumann_decomposition(x)
     
-    #initialize one dimensional array with ones for condition testing
-    h = np.ones((1,len(x)))
+    theta = 0
+    final = 0
+    #choose permuation matrix with highest probability
+    for coefficient, permutation_matrix in result:
+        final += coefficient
+        #print(coefficient)
+        #print(permutation_matrix)
+        if theta < coefficient:
+            theta = coefficient
+            ranking = permutation_matrix
+    #get positions of each document        
+    positions = np.nonzero(ranking)[1]
     
-    #test if x is still a doubly stochastic matrix even after rounding
-    a1 = np.sum(x, axis = 0) == h
-    a2 = np.sum(x, axis = 1) == h.T
+    #convert numpy array to iterable list
+    positions = positions.tolist()
     
-    #only compute brikhoff for doubly stochastic matrixes
-    if np.all(a1) and np.all(a2):
-    
-        #compute birkoff von neumann decomposition
-        result = birkhoff_von_neumann_decomposition(x)
-    
-        theta = 0
-        
-        #choose permuation matrix with highest probability
-        for coefficient, permutation_matrix in result:
-            if theta < coefficient:
-                theta = coefficient
-                ranking = permutation_matrix
-        
-        #get positions of each document        
-        positions = np.nonzero(ranking)[1]
-    
-        #convert numpy array to iterable list
-        positions = positions.tolist()
-    
-        #correct the index of the items in the ranking according to permutation matrix
-        for p, candidate in zip(positions,nRanking[:k]):
+    #correct the index of the items in the ranking according to permutation matrix
+    for p, candidate in zip(positions,nRanking[:k]):
             candidate.currentIndex = p+1
         
-        #sort candidates according to new index
-        nRanking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
+    #sort candidates according to new index
+    nRanking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
         
-        return nRanking, True
-
-    #otherwise we cannot obtain a ranking, hence return the original list and false
-    else:
-        
-        print('Cannot create a ranking for ' + algoName + ' on data set ' + dataSetName)
-        
-        return nRanking, False
+    return nRanking, True
 
 def solveLPWithDIC(ranking, k, dataSetName, algoName):
     
@@ -142,7 +121,6 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     
     print('Start building LP with DIC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
-    v = []  
     u = []
     proCount = 0
     unproCount = 0
@@ -151,15 +129,20 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     
     for candidate in ranking[:k]:
         u.append(candidate.learnedScores)
-        v.append(1 / math.log((1 + candidate.originalIndex),2))
+    
+    # initialize v with DCG
+    v = np.arange(1,(k+1),1)
+    v = 1/np.log2(1 + v + 1)
+    v = np.reshape(v, (1,k))
     
     arrayU = np.asarray(u)
-    arrayV = np.asarray(v)
+    
+    #normalize input
+    arrayU = (arrayU - np.min(arrayU))/(np.max(arrayU)-np.min(arrayU))
     
     arrayU = np.reshape(arrayU, (k,1))
-    arrayV = np.reshape(arrayV, (1,k))
     
-    uv = arrayU.dot(arrayV)
+    uv = arrayU.dot(v)
     uv = uv.flatten()
     
     #negate objective function to convert maximization problem to minimization problem
@@ -208,11 +191,10 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     initf[proListX] = 1/proCount
     initf[unproListX] = -(1/unproCount)
     
-    f1 = initf.dot(arrayV)
-    
+    #build statistical parity constraint
+    f1 = initf.dot(v)
     f1 = f1.flatten()
     f1 = np.reshape(f1, (1,k**2))
-    
     f = matrix(f1)
          
     #set up constraints x <= 1
@@ -239,11 +221,15 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     
     print('Start solving LP with DIC.')
    
-    sol = solvers.lp(c, G, h)
+    try:
+        sol = solvers.lp(c, G, h)
+    except Exception:
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        return 0, False
     
     print('Finished solving LP with DIC.')
     
-    return np.array(sol['x'], dtype=np.float), True
+    return np.array(sol['x']), True
 
 def solveLPWithDPC(ranking, k, dataSetName, algoName):
     
@@ -260,7 +246,6 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     
     print('Start building LP with DPC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
-    v = []  
     u = []
     unproU = 0
     proU = 0
@@ -271,19 +256,16 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     
     for candidate in ranking[:k]:
         u.append(candidate.learnedScores)
-        v.append(1 / math.log((1 + candidate.originalIndex),2))
+    
+    # initialize v with DCG
+    v = np.arange(1,(k+1),1)
+    v = 1/np.log2(1 + v + 1)
+    v = np.reshape(v, (1,k))
     
     arrayU = np.asarray(u)
-    arrayV = np.asarray(v)
     
-    arrayU = np.reshape(arrayU, (k,1))
-    arrayV = np.reshape(arrayV, (1,k))
-    
-    uv = arrayU.dot(arrayV)
-    uv = uv.flatten()
-    
-    #negate objective function to convert maximization problem to minimization problem
-    uv = np.negative(uv)
+    #normalize input
+    arrayU = (arrayU - np.min(arrayU))/(np.max(arrayU)-np.min(arrayU))
     
     I = []
     J = []
@@ -307,13 +289,21 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
             
             proCount += 1
             proListX.append(i)
-            proU += ranking[i].learnedScores
+            proU += arrayU[i]
             
         else:
             
             unproCount += 1
             unproListX.append(i)
-            unproU += ranking[i].learnedScores
+            unproU += arrayU[i]
+            
+    arrayU = np.reshape(arrayU, (k,1))
+    
+    uv = arrayU.dot(v)
+    uv = uv.flatten()
+    
+    #negate objective function to convert maximization problem to minimization problem
+    uv = np.negative(uv)
       
     # check if there are protected items    
     if proCount == 0:
@@ -333,7 +323,7 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     initf[proListX] = 1/(proCount*proU)
     initf[unproListX] = -(1/(unproCount*unproU))
     
-    f1 = initf.dot(arrayV)
+    f1 = initf.dot(v)
     
     f1 = f1.flatten()
     f1 = np.reshape(f1, (1,k**2))
@@ -363,9 +353,11 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     h = matrix([h1,h1,b,d,0.0])
     
     print('Start solving LP with DPC.')
-   
-    sol = solvers.lp(c, G, h)
-    
+    try:
+        sol = solvers.lp(c, G, h)
+    except Exception:
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        return 0, False
     print('Finished solving LP with DPC.')
     
     return np.array(sol['x']), True
@@ -384,8 +376,7 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     """
     
     print('Start building LP with DTC.')    
-    #calculate the attention vector v using 1/log(1+indexOfRanking)
-    v = []  
+    #calculate the attention vector v using 1/log(1+indexOfRanking) 
     u = []
     unproU = 0
     proU = 0
@@ -396,19 +387,17 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     
     for candidate in ranking[:k]:
         u.append(candidate.learnedScores)
-        v.append(1 / math.log((1 + candidate.originalIndex),2))
+    
+    # initialize v with DCG
+    v = np.arange(1,(k+1),1)
+    v = 1/np.log2(1 + v + 1)
+    v = np.reshape(v, (1,k))
     
     arrayU = np.asarray(u)
-    arrayV = np.asarray(v)
     
-    arrayU = np.reshape(arrayU, (k,1))
-    arrayV = np.reshape(arrayV, (1,k))
-    
-    uv = arrayU.dot(arrayV)
-    uv = uv.flatten()
-    
-    #negate objective function to convert maximization problem to minimization problem
-    uv = np.negative(uv)
+    #normalize input
+    arrayU = (arrayU - np.min(arrayU))/(np.max(arrayU)-np.min(arrayU))
+
     
     I = []
     J = []
@@ -432,14 +421,22 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
             
             proCount += 1
             proListX.append(i)
-            proU += ranking[i].learnedScores
+            proU += arrayU[i]
             
         else:
             
             unproCount += 1
             unproListX.append(i)
-            unproU += ranking[i].learnedScores
+            unproU += arrayU[i]
      
+    arrayU = np.reshape(arrayU, (k,1))
+    
+    uv = arrayU.dot(v)
+    uv = uv.flatten()
+    
+    #negate objective function to convert maximization problem to minimization problem
+    uv = np.negative(uv)    
+    
     # check if there are protected items    
     if proCount == 0:
         
@@ -458,7 +455,7 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     initf[proListX] = (1/(proCount*proU))*arrayU[proListX]
     initf[unproListX] = (-(1/(unproCount*unproU))*arrayU[unproListX])
     
-    f1 = initf.dot(arrayV)
+    f1 = initf.dot(v)
     
     f1 = f1.flatten()
     f1 = np.reshape(f1, (1,k**2))
@@ -488,9 +485,11 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     h = matrix([h1,h1,b,d,0.0])
     
     print('Start solving LP with DTC.')
-   
-    sol = solvers.lp(c, G, h)
-    
+    try:
+        sol = solvers.lp(c, G, h)
+    except Exception:
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        return 0, False
     print('Finished solving LP with DTC.')
     
     return np.array(sol['x']), True
