@@ -34,7 +34,7 @@ Fairness of Exposure in Rankings (FOEIR) * Ashudeep Singh and Thorsten Joachims.
 
 ### Learning to Rank:
 
-ListNet
+ListNet * Z. Cao, T. Qin, T.-Y. Liu, M.-F. Tsai, and H. Li, “Learning to rank: From pairwise approach to listwise approach,” Tech. Rep., April 2007. [Online]. Available: https://www.microsoft.com/en-us/research/publication/learning-to-rank-from-pairwise-approach-to-listwise-approach/
 
 ### Score-ordering:
 
@@ -78,7 +78,6 @@ This program was developed and tested in [Python 3.5](https://www.python.org/dow
 * numpy 1.12.0
 * pandas 0.19.2
 * pip 9.0.1
-* Python 3.5 or higher
 * scipy 0.18.1
 
 ### Environment
@@ -97,6 +96,16 @@ However, while developing the benchmarking suit, we used a machine running Windo
 
 3. Start the benchmarking process with:
 `$ python runBenchmarking.py`
+
+### Preprocessing
+
+We also provide preprocessing for raw data sets to make them available in our framework as well as divide them into five folds in `src/csvProcessing/csvRawDataProcessing.py`. Please have a look at the specifications in the code described in that file for further information.
+
+## Evaluation and Interpretation
+
+NDCG@1, NDCG@5, NDCG@10, MAP, Fairness@k and NWN have values in [0,1] where 1 is the best value.
+Performance with regard to DIR and DTR is best at 1. In the diagram we show the diviations from 1, hence we show DIR-1 as well as DTR-1.
+rKL's best value is 0 while it also lies in the interval [0,1].
 
 ## License
     This program is free software: you can redistribute it and/or modify
