@@ -221,11 +221,12 @@ def birkhoff_von_neumann_decomposition(D):
     # the one with the highest probability was most likely already computed.
     while theta <= 0.95 and not begin == end:
         begin = np.count_nonzero(S)
-        count += 1
+        #print evaluation progress after ever 1000 decompositions
         if (count%1000) == 0:
             print("Birkhoff von Neumann decomposition is still running.")
             print("Number of decompositions: " + str(count))
             print(str(begin) + " decompositions still possible.")
+            
         # Create an undirected graph whose adjacency matrix contains a 1
         # exactly where the matrix S has a nonzero entry.
         W = to_pattern_matrix(S)
@@ -300,5 +301,7 @@ def birkhoff_von_neumann_decomposition(D):
         theta += q
         # get non-zero entries for S
         end = np.count_nonzero(S)
+        #counter for number of decompositions
+        count += 1
         
     return list(zip(coefficients, permutations))

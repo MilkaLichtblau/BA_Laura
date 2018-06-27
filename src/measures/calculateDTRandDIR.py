@@ -26,9 +26,9 @@ def calculatedTRandDIR(ranking, algoName, dataSetName, k = 40):
     
     results = []
     
-    if k > 100:
-        k = 100
-        print('Calculation of P for k larger than 100 will not yield any results but just crash the program. Therefore k will be set to 100.')
+    if k > 40:
+        k = 40
+        print('Calculation of P for k larger than 40 will not yield any results but just crash the program. Therefore k will be set to 40.')
     
     try:
         if algoName == 'FOEIR-DIC':
@@ -72,6 +72,7 @@ def dTR(ranking, k, x):
     
     @param ranking: list with candidates from a given ranking
     @param k: truncation point/length of the given ranking
+    @param x: doubly Stochastic matrix for given ranking
     
     return DTR
     """
@@ -144,6 +145,7 @@ def dIR(ranking, k, x):
     
     @param ranking: list with candidates from a given ranking
     @param k: truncation point/length of the given ranking
+    @param x: doubly Stochastic matrix for given ranking
     
     return DIR
     """
@@ -231,7 +233,7 @@ def solveLPWithoutFairness(ranking,algoName, k):
     return the doubly stochastic matrix
     """
     
-    print('Start building LP without Fairness Constraints for' +algoName)    
+    print('Start building LP without Fairness Constraints for ' +algoName)    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
     v = []  
     u = []
