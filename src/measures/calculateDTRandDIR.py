@@ -292,7 +292,7 @@ def solveLPWithoutFairness(ranking,algoName, k):
     G = sparse([M,M1,A,A1])
     h = matrix([h1,h1,b,d])
     
-    print('Start solving LP without Fairness Constraints for' +algoName)
+    print('Start solving LP without Fairness Constraints for ' +algoName)
    
     sol = solvers.lp(c, G, h)
     

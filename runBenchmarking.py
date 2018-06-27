@@ -135,7 +135,7 @@ def evaluateLearning(algoName, ranking, dataSetName, queryNumbers, listNet = Fal
     
     #check if evalK is not larger than 40
     if evalK > 40:
-        print('Evaluations only done for k = 40 due to comparibility reasons. Rankings are still created for '+str(k)+'  If changes to this are wished, please open runBenchmarking and change line 226 accordingly.')
+        print('Evaluations only done for k = 40 due to comparability reasons. Rankings are still created for '+str(k)+'  If changes to this are wished, please open runBenchmarking and change line 226 accordingly.')
         evalK = 40
     
     #loop for each query
@@ -234,7 +234,7 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     
     #check if evalK is not larger than 40
     if evalK > 40:
-        print('Evaluations only done for k = 40 due to comparibility reasons. Rankings are still created for '+str(k)+'  If changes to this are wished, please open runBenchmarking and change line 226 accordingly.')
+        print('Evaluations only done for k = 40 due to comparability reasons. Rankings are still created for '+str(k)+'  If changes to this are wished, please open runBenchmarking and change line 226 accordingly.')
         evalK = 40
     
     #check if the given data comes from the base line algorithm ListNet
