@@ -43,11 +43,16 @@ def createQueriesCSV(rawFilepath, outPath, queryColumn, judgeColumn, sensiColumn
     @param sensiColumn:    Column with the sensitive attribute, we assume a binary sensitive attr
     1 = protected, 0 = non-protected
     
-            no return but creates a CSV files with name dataSet_queryNumber as follows:
+            no return but creates CSV files with name test.csv, train.csv, and validation.csv in the following format:
                 
-                |Score 1|Score 2|...|Score N|Relevance rating as score|Group membership|
+                |sensitive_attribute|session|score|feature_1|feature_2|...|feature_N|
                 
             and devides queries in five fold cross validation each fold having a train (80%), validation(10%) and test (10%) set
+
+    sensitive_attribute denotes group membership and is either 0 or 1
+    session is the query id
+    score has to be the ranking's order with regard to the query of whole numbers starting with 1 and ending with the end of the query
+    feature_1 ... feature_N are created scores which are later used for rankings.
                 
     """
     

@@ -209,6 +209,7 @@ def birkhoff_von_neumann_decomposition(D):
     theta = 0
     end = 0
     begin = np.count_nonzero(S)
+    count = 0
     # only keep computing decomposition while theta smaller than 0.95 
     # and the nonzero entries in S are getting viewer.
     # This is needed to account for cases where the algorithm does not converge due to 
@@ -220,6 +221,11 @@ def birkhoff_von_neumann_decomposition(D):
     # the one with the highest probability was most likely already computed.
     while theta <= 0.95 and not begin == end:
         begin = np.count_nonzero(S)
+        count += 1
+        if (count%1000) == 0:
+            print("Birkhoff von Neumann decomposition is still running.")
+            print("Number of decompositions: " + str(count))
+            print(str(begin) + " decompositions still possible.")
         # Create an undirected graph whose adjacency matrix contains a 1
         # exactly where the matrix S has a nonzero entry.
         W = to_pattern_matrix(S)

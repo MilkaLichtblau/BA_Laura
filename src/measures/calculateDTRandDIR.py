@@ -28,23 +28,27 @@ def calculatedTRandDIR(ranking, algoName, dataSetName, k = 40):
     
     if k > 100:
         k = 100
-        print('Calculation of P for k larger than 100 will not yield any results but just crash the program. Therefore k will be set to 40.')
+        print('Calculation of P for k larger than 100 will not yield any results but just crash the program. Therefore k will be set to 100.')
     
-    if algoName == 'FOEIR-DIC':
-        
-        filepath = 'doublyStochasticPropMatrix/FOEIR-DIC/' + dataSetName + str(k) + '.csv'
-        x = readPFromFile(filepath, algoName)
-    elif algoName == 'FOEIR-DPC':
-        
-        filepath = 'doublyStochasticPropMatrix/FOEIR-DPC/' + dataSetName + str(k) + '.csv'
-        x = readPFromFile(filepath, algoName)
-        
-    elif algoName == 'FOEIR-DTC':
-        
-        filepath = 'doublyStochasticPropMatrix/FOEIR-DTC/' + dataSetName + str(k) + '.csv'
-        x = readPFromFile(filepath, algoName)
-    else:    
+    try:
+        if algoName == 'FOEIR-DIC':
+            
+            filepath = 'doublyStochasticPropMatrix/FOEIR-DIC/' + dataSetName + str(k) + '.csv'
+            x = readPFromFile(filepath, algoName)
+        elif algoName == 'FOEIR-DPC':
+            
+            filepath = 'doublyStochasticPropMatrix/FOEIR-DPC/' + dataSetName + str(k) + '.csv'
+            x = readPFromFile(filepath, algoName)
+            
+        elif algoName == 'FOEIR-DTC':
+            
+            filepath = 'doublyStochasticPropMatrix/FOEIR-DTC/' + dataSetName + str(k) + '.csv'
+            x = readPFromFile(filepath, algoName)
+        else:    
+            x = solveLPWithoutFairness(ranking, algoName, k)
+    except FileNotFoundError:
         x = solveLPWithoutFairness(ranking, algoName, k)
+        pass
     
     x = np.reshape(x,(k,k))
     

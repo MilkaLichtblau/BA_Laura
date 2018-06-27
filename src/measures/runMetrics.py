@@ -38,6 +38,7 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     return list with the name of the data set, the baselineAlgorithm, 
     """
     
+    #checking k for Fairness@k, currently only evaluation of 40, 100, 1000, or 1500 possible
     if k != 40 and k != 100 and k != 1000 and k != 1500:
         print('Cannot obtain alpha adjustment, for k='+str(k)+ 'Setting it to 40 as default.')
         k = 40

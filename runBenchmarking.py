@@ -71,7 +71,7 @@ def main():
             #run ListNet learning process
             listNetRanking, dataSetName  = runListNet(ranking, getTrain, getValidation, getTest)
             #evaluate listNet learning process, print ranked queries and start scoreBasedEval
-            listResults, listFileNames = evaluateLearning(listNetRanking, dataSetName, queryNumbers, True)
+            listResults, listFileNames = evaluateLearning('ListNet',listNetRanking, dataSetName, queryNumbers, True)
             results += listResults
             fileNames += listFileNames
     
@@ -96,11 +96,9 @@ def main():
     
     #fileNames = ['TREC_49.0','TREC_50.0','TREC_51.0','TREC_52.0','TREC_53.0','TREC_54.0','TREC_55.0','TREC_56.0','TREC_57.0','TREC_58.0','TREC_59.0','TREC_60.0','GermanCreditAge25','GermanCreditAge35','GermanCreditSex','ProPublicaSex','ProPublicaRace']
     
-    print(results)
-    
     finalResults = finalEval.calculateFinalEvaluation(results, fileNames)          
     
-    print(finalResults)
+    #print(finalResults)
     
     df = pd.DataFrame(np.array(finalResults).reshape(len(finalResults),4), columns = ['Data_Set_Name', 'Algorithm_Name', 'Measure', 'Value'])
     
@@ -113,11 +111,12 @@ def main():
     print("Total time of execution: "+str(endTime-startTime))
     
     
-def evaluateLearning(ranking, dataSetName, queryNumbers, listNet = False, k = 100):
+def evaluateLearning(algoName, ranking, dataSetName, queryNumbers, listNet = False, k = 100):
     """
     Evaluates the learning algorithms per query, creates an output file for each ranked query,
     and start the scoreBasedEval method for each query
     
+    @param algoName: Name of the algorithm which created the query rankings
     @param ranking: A list of candidates from different queries with new calculated scores for them
     @param dataSetName: Name of the data set without query numbers
     @param queryNumbers: List of query identifiers
@@ -130,6 +129,14 @@ def evaluateLearning(ranking, dataSetName, queryNumbers, listNet = False, k = 10
     #initialize list for evaluation results
     evalResults = []
     fileNames = []
+    
+    #initialize k for evaluation purposes. This k is also used for calculation of FOIER algorithms
+    evalK = k
+    
+    #check if evalK is not larger than 40
+    if evalK > 40:
+        print('Evaluations only done for k = 40 due to comparibility reasons. Rankings are still created for '+str(k)+'  If changes to this are wished, please open runBenchmarking and change line 226 accordingly.')
+        evalK = 40
     
     #loop for each query
     for query in queryNumbers:
@@ -175,7 +182,7 @@ def evaluateLearning(ranking, dataSetName, queryNumbers, listNet = False, k = 10
         queryRanking = updateCurrentIndex(queryRanking)
         queryRanking = updateLearnedIndex(queryRanking)
         #evaluate listNet
-        evalResults += (runMetrics(k, queryProtected, queryNonprotected, queryRanking, queryRanking, finalName, 'ListNet'))
+        evalResults += (runMetrics(evalK, queryProtected, queryNonprotected, queryRanking, queryRanking, finalName, 'ListNet'))
             
         output.sort(key=lambda x: x[2], reverse=True)
         
@@ -187,11 +194,12 @@ def evaluateLearning(ranking, dataSetName, queryNumbers, listNet = False, k = 10
             evalResults += scoreBasedEval(finalName,"", k, True, queryProtected, queryNonprotected, queryRanking, listNet)
             
         try:     
-            with open('rankings/ListNet/' + finalName +'.csv','w',newline='') as mf:
+            with open('rankings/'+algoName+'/' + finalName +'.csv','w',newline='') as mf:
                 writer = csv.writer(mf)
                 writer.writerows(finalPrinting) 
         except Exception:
             raise Exception("Some error occured during file creation. Double check specifics.")
+            pass
     
     return evalResults, fileNames
     
@@ -221,6 +229,14 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     
     evalResults = []
     
+    #initialize k for evaluation purposes. This k is also used for calculation of FOIER algorithms
+    evalK = k
+    
+    #check if evalK is not larger than 40
+    if evalK > 40:
+        print('Evaluations only done for k = 40 due to comparibility reasons. Rankings are still created for '+str(k)+'  If changes to this are wished, please open runBenchmarking and change line 226 accordingly.')
+        evalK = 40
+    
     #check if the given data comes from the base line algorithm ListNet
     #if it does not, construct candidates from the data
     if listNet == False:
@@ -230,7 +246,7 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     #creates a csv with candidates ranked with color-blind ranking
     createRankingCSV(originalRanking, 'Color-Blind/' + dataSetName + 'ranking.csv',k )
     #run the metrics ones for the color-blind ranking
-    evalResults += (runMetrics(k, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
+    evalResults += (runMetrics(evalK, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
     
     
     #create ranking like Feldman et al.
@@ -240,28 +256,30 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     #create CSV with rankings from FAIR
     createRankingCSV(feldRanking, pathFeldman,k)
     #evaluate FAIR with all available measures
-    evalResults += (runMetrics(k, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
+    evalResults += (runMetrics(evalK, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
     
     
     #run evaluations for FOEIR with different Fairness Constraints
+    #we only produce rankings of k = 50 since construction of P as well as dicomposition of Birkhoff take a very long time
+    #and consume a lot of memory.
     #run for FOEIR-DPC
-    dpcRanking, dpcPath, isDPC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', k)
+    dpcRanking, dpcPath, isDPC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', evalK)
     if isDPC == True:
         dpcRanking = updateCurrentIndex(dpcRanking)
-        evalResults += (runMetrics(40, protected, nonProtected, dpcRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
-        createRankingCSV(dpcRanking, dpcPath,40)
+        createRankingCSV(dpcRanking, dpcPath,evalK)
+        evalResults += (runMetrics(evalK, protected, nonProtected, dpcRanking, originalRanking, dataSetName, 'FOEIR-DPC'))
         
-    dtcRanking, dtcPath, isDTC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DTC', k)
+    dtcRanking, dtcPath, isDTC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DTC', evalK)
     if isDTC == True:
         dtcRanking = updateCurrentIndex(dtcRanking)
-        evalResults += (runMetrics(40, protected, nonProtected, dtcRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
-        createRankingCSV(dtcRanking, dtcPath,40)
+        createRankingCSV(dtcRanking, dtcPath,evalK)
+        evalResults += (runMetrics(evalK, protected, nonProtected, dtcRanking, originalRanking, dataSetName, 'FOEIR-DTC'))
         
-    dicRanking, dicPath, isDIC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DIC', k)
+    dicRanking, dicPath, isDIC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DIC', evalK)
     if isDIC == True:
         dicRanking = updateCurrentIndex(dicRanking)
-        createRankingCSV(dicRanking, dicPath,40)
-        evalResults += (runMetrics(40, protected, nonProtected, dicRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
+        createRankingCSV(dicRanking, dicPath,evalK)
+        evalResults += (runMetrics(evalK, protected, nonProtected, dicRanking, originalRanking, dataSetName, 'FOEIR-DIC'))
           
     #run evaluations for FAIR
     #run FAIR algorithm 
@@ -271,7 +289,7 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     #create CSV with rankings from FAIR
     createRankingCSV(FAIRRanking, pathFAIR,k)
     #evaluate FAIR with all available measures
-    evalResults += (runMetrics(k, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
+    evalResults += (runMetrics(evalK, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
     
     if features:
         try:
@@ -283,7 +301,7 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
             #Update the currentIndex of a candidate according to LFRanking
             LFRanking = updateCurrentIndex(LFRanking)
             #evaluate LFRanking with all available measures
-            evalResults += (runMetrics(k, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
+            evalResults += (runMetrics(evalK, protected, nonProtected, LFRanking, originalRanking, dataSetName, 'LFRanking'))
         except Exception:
             print('Could not create LFRanking for ' + dataSetName)
             pass

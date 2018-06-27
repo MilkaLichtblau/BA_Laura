@@ -30,9 +30,9 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     newRanking = ranking
     
     #set k to maximum default value
-    if k > 100:
-        k = 100
-        print('Calculation of P for k larger than 100 will not yield any results but just crash the program. Therefore k will be set to 40.')
+    if k > 50:
+        k = 50
+        print('Calculation of P and the Birkhoff decomposition for k larger than 50 will take a long time and consume a significant amount of memory. Therefore, we set k to a maximum of 50. If you like to change that default got to src/algorithms/FOEIR/runFOEIR.py and change row 33 accordingly.')
     
     #check for which constraint to comput the ranking
     if algoName == 'FOEIR-DIC':
