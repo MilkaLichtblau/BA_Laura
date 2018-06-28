@@ -5,8 +5,8 @@ Created on Mon Jun  4 21:24:57 2018
 @author: Laura
 """
 
-
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import pandas as pd
 
 #constants for algorithms
@@ -37,8 +37,8 @@ def plotData():
 
     algoList = [COLORBLIND, ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC, ALGO_LISTNET]
     
-    #x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
-    x = pd.read_csv('results/evaluationResults.csv')
+    x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
+    #x = pd.read_csv('results/evaluationResults.csv')
     
     dataSets = x['Data_Set_Name']
 
@@ -86,8 +86,8 @@ def plotData():
     
         fig = ax.get_figure()
         fig.tight_layout()
-        #fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
-        fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
+        fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
+        #fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
     
 def plotExtra(x, algoList, measure):
     
@@ -100,26 +100,34 @@ def plotExtra(x, algoList, measure):
     
     plot plots for DTR, DIR and rKL 
     """    
-    rKL = x[(x.Measure == measure)]
-    rKL = rKL[(rKL.Data_Set_Name != 'NWN')]
+    dataFrame = x[(x.Measure == measure)]
+    dataFrame = dataFrame[(dataFrame.Data_Set_Name != 'NWN')]
     
-    rKL1 = rKL[(rKL.Algorithm_Name == algoList[0])]
-    rKL1 = rKL1.rename(columns={'Value': algoList[0]})
+    df = dataFrame[(dataFrame.Algorithm_Name == algoList[0])]
+    df = df.rename(columns={'Value': algoList[0]})
 
-    rKL1 = rKL1.set_index('Data_Set_Name')
+    df = df.set_index('Data_Set_Name')
 
     for algo in algoList[1:]:
-        h1 = rKL[(rKL.Algorithm_Name == algo)]
+        h1 = dataFrame[(dataFrame.Algorithm_Name == algo)]
         h1 = h1.rename(columns={'Value': algo})
         h1 = h1[['Data_Set_Name',algo]]
-        rKL1 = rKL1.join(h1.set_index('Data_Set_Name'))
-    
+        df = df.join(h1.set_index('Data_Set_Name'))
     
     if measure == DIR or measure == DTR:
-        rKL1 = pd.concat([rKL1[algoList] - 1],axis=1)
-        
+        df = pd.concat([df[algoList] - 1],axis=1)
+        dirAndDtr = df.plot.bar(y=algoList)
+        ymin, ymax = plt.ylim()  # return the current ylim
+        plt.ylim(ymin=-1, ymax=1)   # set the ylim to ymin, ymax
+        plt.title(measure+' with Fixed Scales')
+        dirAndDtr.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+               ncol=2, mode="expand", borderaxespad=0.)
+        fig_rKL = dirAndDtr.get_figure()
+        fig_rKL.tight_layout()
+        fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'withFixedScales.pdf',bbox_inches='tight')
     
-    n = rKL1.plot.bar(y=algoList)
+    
+    n = df.plot.bar(y=algoList)
     
     if measure == DIR or measure == DTR:
         plt.axhline(0, color='k',linewidth=0.1)
