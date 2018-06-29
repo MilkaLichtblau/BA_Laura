@@ -119,7 +119,7 @@ def dTR(ranking, k, x):
 
     #initialize penalties if one of the counters is zero
     top = 0
-    bottom = 0.000000000001
+    bottom = 0.01
 
     #calculate value for each group
     if proCount != 0:
@@ -197,7 +197,7 @@ def dIR(ranking, k, x):
     
     #initialize penalties if one of the counters is zero
     top = 0
-    bottom = 0.000000000001
+    bottom = 0.01
 
     #calculate value for each group
     if proCount != 0:

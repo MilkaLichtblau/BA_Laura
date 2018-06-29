@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon May 14 11:42:05 2018
-
-@author: Laura
-"""
 
 from scipy.stats.stats import percentileofscore
 from scipy.stats.stats import scoreatpercentile

@@ -13,8 +13,7 @@ import copy
 
 """
 This method runs the evaluation process.
-Except for the three NDCG values all values are evaluated for the given size of
-k. 
+Except for the three NDCG values all values are evaluated for k = 40. 
 """
 
 def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName, algoName):

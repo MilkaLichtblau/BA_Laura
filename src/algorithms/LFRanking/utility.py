@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri May 11 16:24:33 2018
-
-@author: Laura
-"""
 
 from __future__ import division
 import csv
@@ -11,7 +6,6 @@ import numpy as np
 
 # Code refers to https://github.com/DataResponsibly/FairRank/blob/master
 # a python script define utility function i.e. format source data for computation
-# test of this script can be found in testUtility.py
 
 def transformCSVdata(_data_fn,_target_cols, _sensi_bound): 
     """
@@ -107,5 +101,3 @@ def calculateWeightedScores(_data):
         raise ValueError("Computation error appear in .dot opration")
     return scores 
 
-
-#transformCSVdata('../../preprocessedDataSets/GermanCredit_age25pre.csv',0,1)

@@ -10,6 +10,11 @@ import src.algorithms.ListNet.net as net
 import pandas as pd
 import six
 
+"""
+code refers to https://github.com/fullflu/learning-to-rank
+
+"""
+
 
 np.random.seed(71)
 

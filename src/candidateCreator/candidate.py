@@ -5,7 +5,7 @@ Created on Thu May 17 14:43:30 2018
 """
 
 """
-Most parts of this code taken from 
+Most parts of this code taken from https://github.com/MilkaLichtblau/FA-IR_Ranking
 """
 
 import uuid

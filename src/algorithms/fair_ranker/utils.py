@@ -1,4 +1,7 @@
 '''
+
+Code taken from https://github.com/MilkaLichtblau/FA-IR_Ranking/blob/master/src/post_processing_methods/fair_ranker/utils.py
+
 Created on Mar 29, 2017
 
 provides basic utilities for candidate rankings

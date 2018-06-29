@@ -53,18 +53,3 @@ def fairnessTestAtK(dataSetName, ranking, protected, unProtected, k):
         return 1.0
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-
-"""
-#creates Candidates from the preprocessed CSV files in folder preprocessedDataSets
-protected, nonProtected, originalRanking = cC.createScoreBased("preprocessedScoreSets/GermanCreditAge25pre.csv")
-
-fairnessTestAtK("GermanCreditAge25",originalRanking,protected,nonProtected,100, 0.3, 0.0220)
-"""

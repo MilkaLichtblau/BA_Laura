@@ -1,10 +1,4 @@
 """
-Created on Mon May 14 12:16:22 2018
-
-@author: Laura
-"""
-
-"""
 
 Code taken from https://github.com/MilkaLichtblau/FA-IR_Ranking/blob/master/src/post_processing_methods/fair_ranker/alpha_adjustment.py
 

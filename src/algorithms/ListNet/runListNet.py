@@ -7,7 +7,23 @@ Created on Sun May 27 19:36:19 2018
 
 from src.algorithms.ListNet.listnet import ListNet
 
-def runListNet(ranking, train, validate, test, k = 100, verb = 100, maxIter = 1000, val = 0.5):
+def runListNet(ranking, train, validate, test, k = 100, verb = 50, maxIter = 1000, val = 0.5):
+    
+    """
+    runs ListNet
+    
+    @param ranking: candidates for ranking
+    @param train: path of training data
+    @param validate: path of validation data
+    @param test: path of test data
+    @param k: length of ranking we want to produce
+    @param verb: showing steps from the neural network
+    @param maxIter: maximal iterations of the nueral network
+    @param val: validation ratio
+    
+    return a list of candidates with learned scores from the ranking and the data set name
+    
+    """
 
 
     train_val_filename = train

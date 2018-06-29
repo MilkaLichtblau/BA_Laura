@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon May 14 12:16:22 2018
-
-@author: Laura
-"""
 
 from src.algorithms.fair_ranker.test import FairnessInRankingsTester
 

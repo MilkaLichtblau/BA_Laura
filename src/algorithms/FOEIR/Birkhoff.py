@@ -7,7 +7,7 @@ Created on Sat Jun  2 12:01:59 2018
 
 
 Code mainly refers to https://github.com/jfinkels/birkhoff/blob/master/birkhoff.py
-some modifications were applied to account for not perfect doubly stochastic matrices
+some modifications were applied to account for not perfectly doubly stochastic matrices
 
 
 

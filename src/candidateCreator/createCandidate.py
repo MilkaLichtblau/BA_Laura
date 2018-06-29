@@ -82,7 +82,6 @@ class createCandidate():
         @param filename: Path of input file. Assuming CSV with sensitive 
         attribute in last column and score second last column. If param features
         is true, we further assume that features are in the remaining first columns
-        @param 
         
         return    A list with protected candidates, a list with nonProtected candidates 
                   and a list with the whole colorblind ranking.

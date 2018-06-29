@@ -188,7 +188,7 @@ def evaluateLearning(algoName, ranking, dataSetName, queryNumbers, listNet = Fal
             evalResults += scoreBasedEval(finalName,"", k, True, queryProtected, queryNonprotected, queryRanking, listNet)
             
         try:     
-            with open('rankings/'+algoName+'/' + finalName +'.csv','w',newline='') as mf:
+            with open('rankings/'+algoName+'/' + finalName +'ranking.csv','w',newline='') as mf:
                 writer = csv.writer(mf)
                 writer.writerows(finalPrinting) 
         except Exception:

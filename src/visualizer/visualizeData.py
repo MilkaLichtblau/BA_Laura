@@ -37,8 +37,7 @@ def plotData():
 
     algoList = [COLORBLIND, ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC, ALGO_LISTNET]
     
-    x = pd.read_csv('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/evaluationResults.csv')
-    #x = pd.read_csv('results/evaluationResults.csv')
+    x = pd.read_csv('results/evaluationResults.csv')
     
     dataSets = x['Data_Set_Name']
 
@@ -86,8 +85,7 @@ def plotData():
     
         fig = ax.get_figure()
         fig.tight_layout()
-        fig.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+value+'.pdf',bbox_inches='tight')
-        #fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
+        fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
     
 def plotExtra(x, algoList, measure):
     
@@ -124,8 +122,7 @@ def plotExtra(x, algoList, measure):
                ncol=2, mode="expand", borderaxespad=0.)
         fig_rKL = dirAndDtr.get_figure()
         fig_rKL.tight_layout()
-        fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'withFixedScales.pdf',bbox_inches='tight')
-    
+        fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
     
     n = df.plot.bar(y=algoList)
     
@@ -137,6 +134,5 @@ def plotExtra(x, algoList, measure):
                ncol=2, mode="expand", borderaxespad=0.)
     fig_rKL = n.get_figure()
     fig_rKL.tight_layout()
-    #fig_rKL.savefig('C:/Users/Laura/Documents/Uni/Semester_07/Bachelorarbeit/Code/results/'+measure+'.pdf',bbox_inches='tight')
     fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
 
