@@ -116,14 +116,15 @@ def plotExtra(x, algoList, measure):
         df = pd.concat([df[algoList] - 1],axis=1)
         dirAndDtr = df.plot.bar(y=algoList)
         ymin, ymax = plt.ylim()  # return the current ylim
-        plt.ylim(ymin=-1, ymax=1)   # set the ylim to ymin, ymax
+        plt.ylim(ymin=-0.5, ymax=0.5)   # set the ylim to ymin, ymax
         plt.title(measure+' with Fixed Scales')
         dirAndDtr.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                ncol=2, mode="expand", borderaxespad=0.)
         fig_rKL = dirAndDtr.get_figure()
         fig_rKL.tight_layout()
-        fig_rKL.savefig('results/'+measure+'.pdf',bbox_inches='tight')
-    
+        fig_rKL.savefig('results/'+measure+'withFixedScales.pdf',bbox_inches='tight')
+        
+        
     n = df.plot.bar(y=algoList)
     
     if measure == DIR or measure == DTR:
