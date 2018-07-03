@@ -36,7 +36,7 @@ def plotData():
     Lastly, we print a pdf with NWN, the overall performance of the different Algorithms across all data set.
     """
 
-    algoList = [COLORBLIND, ALGO_FAIR,ALGO_LFRANKING,ALGO_FELDMAN, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC, ALGO_LISTNET]
+    algoList = [COLORBLIND, ALGO_FELDMAN, ALGO_FAIR, ALGO_FOEIRDPC, ALGO_FOEIRDTC, ALGO_FOEIRDIC,ALGO_LFRANKING, ALGO_LISTNET]
     
     x = pd.read_csv('results/evaluationResults.csv')
     
@@ -57,6 +57,12 @@ def plotData():
         c = f[(f.Algorithm_Name == algoList[0])]
         c = c.rename(columns={'Value': algoList[0]})
         
+        if 'GermanCredit' in value:
+            algoList.remove(ALGO_LISTNET)
+        if 'ProPublica' in value:
+            algoList.remove(ALGO_LISTNET)
+            algoList.remove(ALGO_LFRANKING)
+            
         for algo in algoList[1:]:
             h = f[(f.Algorithm_Name == algo)]
             h = h.rename(columns={'Value': algo})
@@ -90,6 +96,12 @@ def plotData():
         fig = ax.get_figure()
         fig.tight_layout()
         fig.savefig('results/'+value+'.pdf',bbox_inches='tight')
+        
+        if 'GermanCredit' in value:
+            algoList.append(ALGO_LISTNET)
+        if 'ProPublica' in value:
+            algoList.append(ALGO_LISTNET)
+            algoList.append(ALGO_LFRANKING)
     
 def plotExtra(x, algoList, measure):
     
