@@ -8,7 +8,7 @@ The following datasets are included:
 
 | Code  | Description |
 | ----- | ----------- |
-| compas | *Correctional Offender Management Profiling for Alternative Sanctions* ([COMPAS](https://github.com/propublica/compas-analysis)): a survey used in some US states for alternative sanctions such as parole * Ke Yang and Julia Stoyanovich. Measuring Fairness in Rankend Outputs. CoRR 2017.  |
+| compas | *Correctional Offender Management Profiling for Alternative Sanctions* ([COMPAS](https://github.com/propublica/compas-analysis)): a survey used in some US states for alternative sanctions such as parole |
 | germancredit | [German Credit Scores](https://archive.ics.uci.edu/ml/datasets/Statlog+(German+Credit+Data)) (SCHUFA) dataset |
 | W3C | [W3C]()|
 
@@ -82,9 +82,9 @@ This program was developed and tested in [Python 3.5](https://www.python.org/dow
 
 ### Environment
 
-For evaluation, we ran the program on a Ubuntu system with 8 kernels and 20 GB ram. We cannot guarantee that a system with less ram will be able to cope with the computational intensive evaluations when set to default values, i.e. k = 40. 
+For evaluation, we ran the program on a Ubuntu system with 8 kernels and 20 GB ram. We cannot guarantee that a system with less ram will be able to cope with the computational intensive evaluations when set to default values, i.e. k = 100. 
 
-However, while developing the benchmarking suit, we used a machine running Windows 10 with 2 kernels and only 4 GB ram which also could cope with k = 40. Note that it is only possible to set k = 40, 100, 1000, or 1500 due to the alpha_c values available for evaluation of Fairness@k.
+However, while developing the benchmarking suit, we used a machine running Windows 10 with 2 kernels and only 4 GB ram. To enable running the benchmark on such a machine set k = 40. Note that it is only possible to set k = 40, 100, 1000, or 1500 due to the alpha_c values available for evaluation of Fairness@k.
 
 ## Installation and Starting the Benchmarking Process
 

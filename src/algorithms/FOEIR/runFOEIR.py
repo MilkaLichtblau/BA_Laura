@@ -29,6 +29,8 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     rankingResultsPath = ''
     newRanking = ranking
     
+    ranking.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
+    
     #set k to maximum default value
     if k > 50:
         k = 50
@@ -103,6 +105,9 @@ def createRanking(x, nRanking, k, algoName, dataSetName):
         
     #sort candidates according to new index
     nRanking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
+    
+    for candidate in nRanking[:k]:
+        candidate.qualifications = candidate.learnedScores
         
     return nRanking, True
 

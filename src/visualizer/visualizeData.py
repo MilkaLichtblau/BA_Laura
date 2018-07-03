@@ -22,6 +22,7 @@ ALGO_LISTNET = 'ListNet'
 DIR = 'DIR'
 DTR = 'DTR'
 RKL = 'rKL'
+FAK = 'FairnessAtK'
 
 def plotData():
     
@@ -43,9 +44,9 @@ def plotData():
 
     dataSets = dataSets.drop_duplicates()
     
-    extraMeasures = [DIR, DTR, RKL]
+    fairnessMeasures = [DIR, DTR, RKL, FAK]
     #plots the extra Plots for DIR, DTR, and RKL
-    for i in extraMeasures:
+    for i in fairnessMeasures:
         plotExtra(x, algoList, i)
         
     #plots a plot for each data set and NWN
@@ -69,12 +70,15 @@ def plotData():
             c = c[(c.Measure != 'rKL')]
             c = c[(c.Measure != 'DIR')]
             c = c[(c.Measure != 'DTR')]
+            c = c[(c.Measure != 'FairnessAtK')]
             
-            ax = c.plot.bar(x=['Measure'], y=algoList)
+            ax = c.plot.bar(x= c.Measure, y=algoList)
+            plt.ylabel('Relevance')
             
         else:
-        
-            ax = c.plot.bar(x=['Measure'], y=algoList)
+            
+            ax = c.plot.bar(x= c.Measure, y=algoList)
+            plt.ylabel('Normalized Winning Number')
         
         axes = plt.gca()
         axes.set_ylim([0,1])
@@ -114,10 +118,16 @@ def plotExtra(x, algoList, measure):
     
     if measure == DIR or measure == DTR:
         df = pd.concat([df[algoList] - 1],axis=1)
-        dirAndDtr = df.plot.bar(y=algoList)
-        ymin, ymax = plt.ylim()  # return the current ylim
-        plt.ylim(ymin=-0.5, ymax=0.5)   # set the ylim to ymin, ymax
-        plt.title(measure+' with Fixed Scales')
+        dirAndDtr = df.plot.barh(y=algoList)
+        xmin, xmax = plt.xlim()  # return the current ylim
+        plt.xlim(xmin=-0.5, xmax=0.5)   # set the ylim to ymin, ymax
+        plt.title(measure+'\n (Fixed Scale)')
+        plt.axvline(0, color='k',linewidth=0.1)
+        if measure == DIR:
+            plt.xlabel('Disparate Impact Ratio')
+        else:
+            plt.xlabel('Disparate Treatment Ratio')
+        plt.ylabel('Name of Data Set')
         dirAndDtr.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                ncol=2, mode="expand", borderaxespad=0.)
         fig_rKL = dirAndDtr.get_figure()
@@ -125,12 +135,22 @@ def plotExtra(x, algoList, measure):
         fig_rKL.savefig('results/'+measure+'withFixedScales.pdf',bbox_inches='tight')
         
         
-    n = df.plot.bar(y=algoList)
+    n = df.plot.barh(y=algoList)
     
     if measure == DIR or measure == DTR:
-        plt.axhline(0, color='k',linewidth=0.1)
+        plt.axvline(0, color='k',linewidth=0.1)
+        
+    if measure == DIR:
+        plt.xlabel('Disparate Impact Ratio')
+    elif measure == DTR:
+        plt.xlabel('Disparate Treatment Ratio')
+    elif measure == RKL:
+        plt.xlabel('Normalized Discounted KL-Divergence')
+    else:
+        plt.xlabel('Fairness@k')
         
     plt.title(measure)
+    plt.ylabel('Name of Data Set')
     n.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                ncol=2, mode="expand", borderaxespad=0.)
     fig_rKL = n.get_figure()

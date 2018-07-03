@@ -115,6 +115,11 @@ class createCandidate():
         
         #creating a color-blind ranking which is only based on scores
         ranking.sort(key=lambda candidate: candidate.qualification, reverse=True)
+        
+        for i, candidate in enumerate(ranking):
+            candidate.originalIndex = i + 1
+            candidate.learnedIndex = i + 1
+            candidate.currentIndex = i + 1
     
         return protected, nonProtected, ranking
     

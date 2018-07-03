@@ -44,7 +44,9 @@ def fairRanking(k, protectedCandidates, nonProtectedCandidates, minProp, alpha):
 
     the left-over candidates that were not selected into the ranking, sorted color-blindly
     """
-
+    
+    nonProtectedCandidates.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
+    protectedCandidates.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
     
     result = []
     gft = FairnessInRankingsTester(minProp, alpha, k, correctedAlpha=True)

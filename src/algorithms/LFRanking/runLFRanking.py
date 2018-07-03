@@ -35,12 +35,18 @@ def runLFRanking(ranking,protected,unprotected,_k,DataSetName):
     unpro_dat = []
     scores = []
     
+    ranking.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
+    
     for i in range(len(ranking)):
         dat.append(ranking[i].features)
         scores.append(ranking[i].learnedScores)
+        
+    protected.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
     
     for i in range(len(protected)):
         pro_dat.append(protected[i].features)
+        
+    unprotected.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
         
     for i in range(len(unprotected)):
         unpro_dat.append(unprotected[i].features)
