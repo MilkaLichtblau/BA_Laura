@@ -92,8 +92,8 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     #calculate rKL
     #get the maximal rKL value
     max_rKL=rKL.getNormalizer(user_N,pro_N,dataSetName) 
-    #get evaluation results for rKL
-    eval_rKL=rKL.calculateNDFairness(indexRanking, proIndex, k, max_rKL)
+    #get evaluation results for rKL with steps of size 10
+    eval_rKL=rKL.calculateNDFairness(indexRanking, proIndex, 10, max_rKL)
     #append results
     results.append([dataSetName, algoName, 'rKL', eval_rKL])
     

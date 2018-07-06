@@ -57,7 +57,7 @@ class ListNet(object):
                     dt = data[data.session == t]
                     if dt.score.sum() == 0:
                         continue
-                    xt = dt.loc[:,np.in1d(dt.columns,["session","score","sensitive_attribute",0],invert=True)]
+                    xt = dt.loc[:,np.in1d(dt.columns,["session","score","sensitive_attribute"],invert=True)]
                     self.X.append(xt.values.astype(np.float32))
                     self.Y.append(dt.score.values.astype(np.float32))
                 self.T = len(self.X)

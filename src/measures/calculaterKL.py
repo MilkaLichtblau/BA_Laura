@@ -141,7 +141,7 @@ def getNormalizer(_user_N,_pro_N, dataSetName):
 
     # error handling for value 
     if _user_N <=0:
-        raise ValueError("Input a valud user number")
+        raise ValueError("Input a valid user number")
     if _pro_N <=0:
         raise ValueError("Input a valid protected group size")
     if _pro_N >= _user_N:

@@ -29,26 +29,8 @@ def calculatedTRandDIR(ranking, algoName, dataSetName, k = 40):
     if k > 40:
         k = 40
         print('Calculation of P for k larger than 40 will not yield any results but just crash the program. Therefore k will be set to 40.')
-    
-    try:
-        if algoName == 'FOEIR-DIC':
-            
-            filepath = 'doublyStochasticPropMatrix/FOEIR-DIC/' + dataSetName + str(k) + '.csv'
-            x = readPFromFile(filepath, algoName)
-        elif algoName == 'FOEIR-DPC':
-            
-            filepath = 'doublyStochasticPropMatrix/FOEIR-DPC/' + dataSetName + str(k) + '.csv'
-            x = readPFromFile(filepath, algoName)
-            
-        elif algoName == 'FOEIR-DTC':
-            
-            filepath = 'doublyStochasticPropMatrix/FOEIR-DTC/' + dataSetName + str(k) + '.csv'
-            x = readPFromFile(filepath, algoName)
-        else:    
-            x = solveLPWithoutFairness(ranking, algoName, k)
-    except FileNotFoundError:
-        x = solveLPWithoutFairness(ranking, algoName, k)
-        pass
+       
+    x = solveLPWithoutFairness(ranking, algoName, k)
     
     x = np.reshape(x,(k,k))
     
@@ -301,26 +283,3 @@ def solveLPWithoutFairness(ranking,algoName, k):
     print('Finished solving LP without Fairness Constraints.')
     
     return np.array(sol['x'])
-
-def readPFromFile(filepath, algoName):
-    
-    """
-    Read earlier computed doubly stochastic matrix from file for FOEIR
-    
-    @param filepath: Path of the doubly stochastic matrix 
-    @param algoName: Name of the algorithm the doubly stochastiv matrix should be read for
-    
-    return the flattened doubly stochastic matrix
-    """
-    
-    #try to open csv file and save content in numpy array, if not found raise error
-    try:
-        with open(filepath, newline='') as File:  
-            reader = csv.reader(File)
-            x = np.array([row for row in reader])
-    except FileNotFoundError:
-        raise FileNotFoundError("Could not find file with P for" + algoName + '.')
-        
-    x = x.flatten()
-    
-    return x

@@ -38,6 +38,9 @@ def runFAIR(dataSetName, protected, nonProtected, k):
         
         rankingResultsPath = "FA-IR/" + nDataSetName + "ranking.csv"
         
+        for candidate in ranking[:k]:
+            candidate.qualification = candidate.learnedScores
+        
         return ranking, notSelected, rankingResultsPath
         
 def initPAndAlpha(k):

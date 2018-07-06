@@ -75,7 +75,6 @@ def main():
             results += listResults
             fileNames += listFileNames
     
-    
     #read all data sets in German Credit
     for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
         for name in files:
@@ -97,7 +96,7 @@ def main():
     df = pd.DataFrame(np.array(finalResults).reshape(len(finalResults),4), columns = ['Data_Set_Name', 'Algorithm_Name', 'Measure', 'Value'])
     
     df.to_csv('results/evaluationResults.csv', index=(False))
-     
+    
     plotData()
    
     endTime = datetime.datetime.now()
@@ -240,21 +239,10 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     #creates a csv with candidates ranked with color-blind ranking
     createRankingCSV(originalRanking, 'Color-Blind/' + dataSetName + 'ranking.csv',k )
     #run the metrics ones for the color-blind ranking
-    evalResults += (runMetrics(evalK, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind'))
-    
-    
-    #create ranking like Feldman et al.
-    feldRanking, pathFeldman = feldmanRanking(protected, nonProtected, k, dataSetName)
-    #Update the currentIndex of a candidate according to feldmanRanking
-    feldRanking = updateCurrentIndex(feldRanking)
-    #create CSV with rankings from FAIR
-    createRankingCSV(feldRanking, pathFeldman,k)
-    #evaluate FAIR with all available measures
-    evalResults += (runMetrics(evalK, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
-    
+    evalResults += (runMetrics(evalK, protected, nonProtected, originalRanking, originalRanking, dataSetName, 'Color-Blind')) 
     
     #run evaluations for FOEIR with different Fairness Constraints
-    #we only produce rankings of k = 50 since construction of P as well as dicomposition of Birkhoff take a very long time
+    #we only produce rankings of k = 40 since construction of P as well as dicomposition of Birkhoff take a very long time
     #and consume a lot of memory.
     #run for FOEIR-DPC
     dpcRanking, dpcPath, isDPC = runFOEIR(originalRanking, dataSetName, 'FOEIR-DPC', evalK)
@@ -284,6 +272,15 @@ def scoreBasedEval(dataSetName, dataSetPath, k = 100, features = True, protected
     createRankingCSV(FAIRRanking, pathFAIR,k)
     #evaluate FAIR with all available measures
     evalResults += (runMetrics(evalK, protected, nonProtected, FAIRRanking, originalRanking, dataSetName, 'FAIR'))
+    
+    #create ranking like Feldman et al.
+    feldRanking, pathFeldman = feldmanRanking(protected, nonProtected, k, dataSetName)
+    #Update the currentIndex of a candidate according to feldmanRanking
+    feldRanking = updateCurrentIndex(feldRanking)
+    #create CSV with rankings from FAIR
+    createRankingCSV(feldRanking, pathFeldman,k)
+    #evaluate FAIR with all available measures
+    evalResults += (runMetrics(evalK, protected, nonProtected, feldRanking, originalRanking, dataSetName, 'FeldmanEtAl'))
     
     if features:
         try:

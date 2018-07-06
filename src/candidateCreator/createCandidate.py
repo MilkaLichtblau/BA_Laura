@@ -58,9 +58,9 @@ class createCandidate():
                 features = np.asarray(row[4:])
                 # access second row of .csv with protected attribute 0 = nonprotected group and 1 = protected group
                 if row[1] == 0:
-                    nonProtected.append(Candidate(1 - row[3]/l, 1- row[3]/l, [], row[3], row[2], features))
+                    nonProtected.append(Candidate(1 - float(row[3])/l, 1- float(row[3])/l, [], float(row[3]), row[2], features))
                 else:
-                    protected.append(Candidate(1 - row[3]/l, 1 - row[3]/l, "protectedGroup", row[3], row[2], features))
+                    protected.append(Candidate(1 - float(row[3])/l, 1 - float(row[3])/l, "protectedGroup", float(row[3]), row[2], features))
     
             queryRanking = nonProtected + protected
         
@@ -101,9 +101,9 @@ class createCandidate():
                     features = np.asarray(row[:(-2)])
                     # access second row of .csv with protected attribute 0 = nonprotected group and 1 = protected group
                     if row[-1] == 0:
-                        nonProtected.append(Candidate(row[-2], row[-2], [], i, [], features))
+                        nonProtected.append(Candidate(float(row[-2]), float(row[-2]), [], i, [], features))
                     else:
-                        protected.append(Candidate(row[-2], row[-2], "protectedGroup", i, [], features))
+                        protected.append(Candidate(float(row[-2]), float(row[-2]), "protectedGroup", i, [], features))
         except FileNotFoundError:
             raise FileNotFoundError("File could not be found. Something must have gone wrong during preprocessing.")                
     

@@ -27,7 +27,6 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     
     #initialize as empty string
     rankingResultsPath = ''
-    newRanking = ranking
     
     ranking.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
     
@@ -58,11 +57,11 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
         
         #creat the new ranking, if not possible, isRanked will be false and newRanking
         #will be equal to ranking
-        newRanking, isRanked = createRanking(x, ranking, k, algoName, dataSetName)
+        ranking, isRanked = createRanking(x, ranking, k, algoName, dataSetName)
         
         rankingResultsPath = algoName + '/' + dataSetName + "ranking.csv"
     
-    return newRanking, rankingResultsPath, isRanked
+    return ranking, rankingResultsPath, isRanked
     
     
 def createRanking(x, nRanking, k, algoName, dataSetName):
@@ -101,13 +100,19 @@ def createRanking(x, nRanking, k, algoName, dataSetName):
     
     #correct the index of the items in the ranking according to permutation matrix
     for p, candidate in zip(positions,nRanking[:k]):
-            candidate.currentIndex = p+1
+        candidate.currentIndex = p+1
+    
+    #make sure rest of ranking is still ordered color-blindly for evaluation with rKL
+    nRanking[k:].sort(key=lambda candidate: candidate.learnedScores, reverse=False)
+    
+    for i, candidate in enumerate(nRanking):
+        candidate.currentIndex = i + 1
         
     #sort candidates according to new index
     nRanking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
     
     for candidate in nRanking[:k]:
-        candidate.qualifications = candidate.learnedScores
+        candidate.qualification = candidate.learnedScores
         
     return nRanking, True
 

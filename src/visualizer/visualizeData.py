@@ -8,6 +8,7 @@ Created on Mon Jun  4 21:24:57 2018
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import pandas as pd
+import numpy as np
 
 #constants for algorithms
 COLORBLIND = 'Color-Blind'
@@ -78,12 +79,12 @@ def plotData():
             c = c[(c.Measure != 'DTR')]
             c = c[(c.Measure != 'FairnessAtK')]
             
-            ax = c.plot.bar(x= c.Measure, y=algoList)
+            ax = c.plot.bar(x= np.array(c.Measure), y=algoList)
             plt.ylabel('Relevance')
             
         else:
             
-            ax = c.plot.bar(x= c.Measure, y=algoList)
+            ax = c.plot.bar(x= np.array(c.Measure), y=algoList)
             plt.ylabel('Normalized Winning Number')
         
         axes = plt.gca()
