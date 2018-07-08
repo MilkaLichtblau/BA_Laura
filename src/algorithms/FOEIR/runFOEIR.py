@@ -39,12 +39,14 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     if algoName == 'FOEIR-DIC':
 
         x, isRanked = solveLPWithDIC(ranking, k, dataSetName, algoName)
+        
     elif algoName == 'FOEIR-DPC':
         
-        x, isRanked = solveLPWithDIC(ranking, k, dataSetName, algoName)
+        x, isRanked = solveLPWithDPC(ranking, k, dataSetName, algoName)
+        
     elif algoName == 'FOEIR-DTC':
         
-        x, isRanked = solveLPWithDIC(ranking, k, dataSetName, algoName)
+        x, isRanked = solveLPWithDTC(ranking, k, dataSetName, algoName)
         
     if isRanked == True:
         
@@ -52,19 +54,21 @@ def runFOEIR(ranking, dataSetName, algoName, k = 40):
     
         x = np.asarray(x, dtype='float64')
         
+        helperPath = algoName+'Ranking'
+        
         #crate csv file with doubly stochastic matrix inside
-        createPCSV(x, dataSetName, algoName, k)
+        createPCSV(x, dataSetName, helperPath, k)
         
         #creat the new ranking, if not possible, isRanked will be false and newRanking
         #will be equal to ranking
-        ranking, isRanked = createRanking(x, ranking, k, algoName, dataSetName)
+        ranking, isRanked = createRanking(x, ranking, k)
         
         rankingResultsPath = algoName + '/' + dataSetName + "ranking.csv"
     
     return ranking, rankingResultsPath, isRanked
     
     
-def createRanking(x, nRanking, k, algoName, dataSetName):
+def createRanking(x, nRanking, k):
     
     """
     Calculates the birkhoff-von-Neumann decomopsition using package available at
@@ -73,8 +77,6 @@ def createRanking(x, nRanking, k, algoName, dataSetName):
     @param x: doubly stochastic matrix 
     @param nRanking: nRanking: List with candidate objects from the data set ordered color-blindly
     @param k: length of the ranking
-    @param dataSetName: Name of the data set the candidates are from
-    @param algoName: Name of inputed algorithm
     
     return the a list with candidate objects ordered according to the new ranking
     """
@@ -103,7 +105,7 @@ def createRanking(x, nRanking, k, algoName, dataSetName):
         candidate.currentIndex = p+1
     
     #make sure rest of ranking is still ordered color-blindly for evaluation with rKL
-    nRanking[k:].sort(key=lambda candidate: candidate.learnedScores, reverse=False)
+    nRanking[k:].sort(key=lambda candidate: candidate.learnedScores, reverse=True)
     
     for i, candidate in enumerate(nRanking):
         candidate.currentIndex = i + 1
@@ -116,10 +118,10 @@ def createRanking(x, nRanking, k, algoName, dataSetName):
         
     return nRanking, True
 
-def solveLPWithDIC(ranking, k, dataSetName, algoName):
+def solveLPWithDPC(ranking, k, dataSetName, algoName):
     
     """
-    Solve the linear program with DIC
+    Solve the linear program with DPC
     
     @param ranking: list of candidate objects in the ranking
     @param k: length of the ranking
@@ -129,7 +131,7 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     return doubly stochastic matrix as numpy array
     """
     
-    print('Start building LP with DIC.')    
+    print('Start building LP with DPC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
     u = []
     proCount = 0
@@ -229,22 +231,22 @@ def solveLPWithDIC(ranking, k, dataSetName, algoName):
     
     h = matrix([h1,h1,b,d,0.0])
     
-    print('Start solving LP with DIC.')
+    print('Start solving LP with DPC.')
    
     try:
         sol = solvers.lp(c, G, h)
     except Exception:
-        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + '.')
         return 0, False
     
-    print('Finished solving LP with DIC.')
+    print('Finished solving LP with DPC.')
     
     return np.array(sol['x']), True
 
-def solveLPWithDPC(ranking, k, dataSetName, algoName):
+def solveLPWithDTC(ranking, k, dataSetName, algoName):
     
     """
-    Solve the linear program with DPC
+    Solve the linear program with DTC
     
     @param ranking: list of candidate objects in the ranking
     @param k: length of the ranking
@@ -254,7 +256,7 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     return doubly stochastic matrix as numpy array
     """
     
-    print('Start building LP with DPC.')    
+    print('Start building LP with DTC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking)
     u = []
     unproU = 0
@@ -362,20 +364,20 @@ def solveLPWithDPC(ranking, k, dataSetName, algoName):
     #assemble constraint values
     h = matrix([h1,h1,b,d,0.0])
     
-    print('Start solving LP with DPC.')
+    print('Start solving LP with DTC.')
     try:
         sol = solvers.lp(c, G, h)
     except Exception:
-        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + '.')
         return 0, False
-    print('Finished solving LP with DPC.')
+    print('Finished solving LP with DTC.')
     
     return np.array(sol['x']), True
 
-def solveLPWithDTC(ranking, k, dataSetName, algoName):
+def solveLPWithDIC(ranking, k, dataSetName, algoName):
     
     """
-    Solve the linear program with DTC
+    Solve the linear program with DIC
     
     @param ranking: list of candidate objects in the ranking
     @param k: length of the ranking
@@ -385,7 +387,7 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     return doubly stochastic matrix as numpy array
     """
     
-    print('Start building LP with DTC.')    
+    print('Start building LP with DIC.')    
     #calculate the attention vector v using 1/log(1+indexOfRanking) 
     u = []
     unproU = 0
@@ -494,12 +496,12 @@ def solveLPWithDTC(ranking, k, dataSetName, algoName):
     #assemble constraint values
     h = matrix([h1,h1,b,d,0.0])
     
-    print('Start solving LP with DTC.')
+    print('Start solving LP with DIC.')
     try:
         sol = solvers.lp(c, G, h)
     except Exception:
-        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + ' because no unprotected items in data set.')
+        print('Cannot create a P for ' + algoName + ' on data set ' + dataSetName + '.')
         return 0, False
-    print('Finished solving LP with DTC.')
+    print('Finished solving LP with DIC.')
     
     return np.array(sol['x']), True

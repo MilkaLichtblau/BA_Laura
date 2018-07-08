@@ -101,8 +101,8 @@ def plotData():
         if 'GermanCredit' in value:
             algoList.append(ALGO_LISTNET)
         if 'ProPublica' in value:
-            algoList.append(ALGO_LISTNET)
             algoList.append(ALGO_LFRANKING)
+            algoList.append(ALGO_LISTNET)
     
 def plotExtra(x, algoList, measure):
     
@@ -133,7 +133,7 @@ def plotExtra(x, algoList, measure):
         df = pd.concat([df[algoList] - 1],axis=1)
         dirAndDtr = df.plot.barh(y=algoList)
         xmin, xmax = plt.xlim()  # return the current ylim
-        plt.xlim(xmin=-0.5, xmax=0.5)   # set the ylim to ymin, ymax
+        plt.xlim(xmin=-0.75, xmax=0.75)   # set the ylim to ymin, ymax
         plt.title(measure+'\n (Fixed Scale)')
         plt.axvline(0, color='k',linewidth=0.1)
         if measure == DIR:
@@ -149,6 +149,7 @@ def plotExtra(x, algoList, measure):
         
         
     n = df.plot.barh(y=algoList)
+    plt.title(measure)
     
     if measure == DIR or measure == DTR:
         plt.axvline(0, color='k',linewidth=0.1)
@@ -160,9 +161,9 @@ def plotExtra(x, algoList, measure):
     elif measure == RKL:
         plt.xlabel('Normalized Discounted KL-Divergence')
     else:
-        plt.xlabel('Fairness@k')
-        
-    plt.title(measure)
+        plt.xlabel('Fairness@40')
+        plt.title('Fairness@40')
+    
     plt.ylabel('Name of Data Set')
     n.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                ncol=2, mode="expand", borderaxespad=0.)

@@ -10,14 +10,15 @@ The following datasets are included:
 | ----- | ----------- |
 | compas | *Correctional Offender Management Profiling for Alternative Sanctions* ([COMPAS](https://github.com/propublica/compas-analysis)): a survey used in some US states for alternative sanctions such as parole |
 | germancredit | [German Credit Scores](https://archive.ics.uci.edu/ml/datasets/Statlog+(German+Credit+Data)) (SCHUFA) dataset |
-| W3C | [W3C]()|
+| TREC | [TREC](* M. Zehlike and C. Castillo, “Reducing disparate exposure in ranking: A learning
+to rank approach.” [Online]. Available: http://arxiv.org/pdf/1805.08716v1) also refered to as W3C data set|
 
 
 ## Fair Ranking Algorithms:
 
 Our framework currently benchmarks the following fair ranking algorithms
 
-### In-processing:
+### Model Regularization:
 
 To be implemented
 

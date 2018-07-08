@@ -50,8 +50,8 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     #deep copy since we need to sort this list differently from the other ranking list
     oR = copy.deepcopy(originalRanking)
     
-    #make sure ranking is sorted according to its qualifications
-    ranking.sort(key=lambda candidate: candidate.qualification, reverse=True)
+    #make sure ranking is sorted according to the produced ranking
+    ranking.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
     
     #make sure originalRanking is still ordered descendingly on original qualifications
     oR.sort(key=lambda candidate: candidate.originalQualification, reverse=True)
@@ -98,7 +98,7 @@ def runMetrics(k, protected, unprotected, ranking, originalRanking, dataSetName,
     results.append([dataSetName, algoName, 'rKL', eval_rKL])
     
     #calculate DTR and DIR and return their results
-    results += d.calculatedTRandDIR(ranking, algoName, dataSetName, k = 100)
+    results += d.calculatedTRandDIR(ranking, algoName, dataSetName, k = 40)
     
     #calculate Fairnes@k
     eval_FairnessAtK = ftak.fairnessTestAtK(dataSetName, ranking, protected, unprotected, k)
