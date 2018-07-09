@@ -10,8 +10,7 @@ The following datasets are included:
 | ----- | ----------- |
 | compas | *Correctional Offender Management Profiling for Alternative Sanctions* ([COMPAS](https://github.com/propublica/compas-analysis)): a survey used in some US states for alternative sanctions such as parole |
 | germancredit | [German Credit Scores](https://archive.ics.uci.edu/ml/datasets/Statlog+(German+Credit+Data)) (SCHUFA) dataset |
-| TREC | [TREC](* M. Zehlike and C. Castillo, “Reducing disparate exposure in ranking: A learning
-to rank approach.” [Online]. Available: http://arxiv.org/pdf/1805.08716v1) also refered to as W3C data set|
+| TREC | [TREC] * M. Zehlike and C. Castillo, “Reducing disparate exposure in ranking: A learning to rank approach.” [Online]. Available: http://arxiv.org/pdf/1805.08716v1 also refered to as W3C data set|
 
 
 ## Fair Ranking Algorithms:
@@ -39,9 +38,9 @@ ListNet * Z. Cao, T. Qin, T.-Y. Liu, M.-F. Tsai, and H. Li, “Learning to rank:
 
 ### Score-ordering:
 
-Color-blind
+Color-blind * Meike Zehlike, Francesco Bonchi, Carlos Castillo, Sara Hajian, Mohamed Megahed and Ricardo Baeza-Yates. FA\*IR: A Fair Top-k Ranking Algorithm. CIKM 2017. *(Please use branch FA-IR_CIKM_17 for reproducing experiments of this paper)*
 
-Feldman et al.
+Feldman et al. * M. Feldman, S. A. Friedler, J. Moeller, C. Scheidegger, and S. Venkatasubramanian, “Certifying and removing disparate impact,” in Proceedings of the 21th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, ser. KDD ’15. New York, NY, USA: ACM, 2015, pp. 259–268. [Online]. Available: http://doi.acm.org/10.1145/2783258.2783311
 
 ## Measures:
 
