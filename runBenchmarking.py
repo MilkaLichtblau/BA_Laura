@@ -55,7 +55,7 @@ def main():
     fileNames = []
     
     startTime = datetime.datetime.now()
-    """
+    
     #read all data sets in TREC including all folds
     for dirpath, dirnames, files in os.walk("learningDataSets/TREC/"):
         
@@ -75,7 +75,6 @@ def main():
             results += listResults
             fileNames += listFileNames
     
-    
     #read all data sets in German Credit
     for dirpath, dirnames, files in os.walk("scoredDataSets/GermanCredit/"):
         for name in files:
@@ -83,6 +82,7 @@ def main():
                 dataSetName = getDataSetName(name)
                 fileNames.append(dataSetName)
                 results += (scoreBasedEval(dataSetName, "scoredDataSets/GermanCredit/" + name, 100))
+            print(results)
     
     #read all data sets in COMPAS
     for dirpath, dirnames, files in os.walk("scoredDataSets/COMPAS/"):
@@ -91,13 +91,13 @@ def main():
                 dataSetName = getDataSetName(name)
                 fileNames.append(dataSetName)
                 results += (scoreBasedEval(dataSetName, "scoredDataSets/COMPAS/" + name, 100, False)) 
-    
+                
     finalResults = finalEval.calculateFinalEvaluation(results, fileNames)    
 
     df = pd.DataFrame(np.array(finalResults).reshape(len(finalResults),4), columns = ['Data_Set_Name', 'Algorithm_Name', 'Measure', 'Value'])
     
     df.to_csv('results/evaluationResults.csv', index=(False))
-    """
+    
     endTime = datetime.datetime.now()
     
     print("Total time of execution: "+str(endTime-startTime))

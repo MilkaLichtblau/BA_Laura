@@ -174,8 +174,8 @@ def dIR(ranking, k, x):
     u = np.reshape(u, (k,1))
     
     # calculate CTR for each group
-    proCTR = np.sum((np.sum((x[proListX]*u[proListX]*v),axis=1)),axis=0)
-    unproCTR = np.sum((np.sum((x[unproListX]*u[unproListX]*v),axis=1)),axis=0)
+    proCTR = np.sum((np.sum((u[proListX]*x[proListX]*v),axis=1)),axis=0)
+    unproCTR = np.sum((np.sum((u[unproListX]*x[unproListX]*v),axis=1)),axis=0)
     
     #initialize penalties if one of the counters is zero
     top = 0

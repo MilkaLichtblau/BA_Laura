@@ -104,8 +104,15 @@ def createRanking(x, nRanking, k):
     for p, candidate in zip(positions,nRanking[:k]):
         candidate.currentIndex = p+1
     
+    top = nRanking[:k]
+    tail = nRanking[k:]
+    
+    #sort top 40 scores according to index
+    top.sort(key=lambda candidate: candidate.currentIndex, reverse=False)
     #make sure rest of ranking is still ordered color-blindly for evaluation with rKL
-    nRanking[k:].sort(key=lambda candidate: candidate.learnedScores, reverse=True)
+    tail.sort(key=lambda candidate: candidate.learnedScores, reverse=True)
+    
+    nRanking = top + tail
     
     for i, candidate in enumerate(nRanking):
         candidate.currentIndex = i + 1
